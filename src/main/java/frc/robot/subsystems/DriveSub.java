@@ -68,7 +68,7 @@ import static edu.wpi.first.units.Units.Volts;
 import java.util.List;
 import java.util.Optional;
 
-
+import frc.robot.LimelightHelpers;
 
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -412,24 +412,23 @@ public class DriveSub extends SubsystemBase {
     } 
   }
 
-  public double getLimelight(){
-   
-    /* PhotonPipelineResult result = noteDetectCamera.getLatestResult();
-    
-    double x = 0;
-    
-    if (result.hasTargets()){
-      x = result.getBestTarget().getYaw();
-   
-    } */
+  public double getLimelightRY(){
+
+    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+    NetworkTableEntry ry = table.getEntry("ry");
+    double y = ry.getDouble(0);
+    SmartDashboard.putNumber("aprilTagAngle", -y);
+    return -y;
+  }
+
+  public double getLimelightTX(){
 
     NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
     NetworkTableEntry tx = table.getEntry("tx");
     double x = tx.getDouble(0);
-    SmartDashboard.putNumber("note angle", -x);
+    SmartDashboard.putNumber("distanceFromCrosshair", -x);
     return -x;
   }
-
 
   public void setOffset(double angle){
     robotOffset = angle;
