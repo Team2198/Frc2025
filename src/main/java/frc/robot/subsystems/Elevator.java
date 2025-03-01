@@ -50,8 +50,9 @@ public class Elevator extends SubsystemBase {
 
   private final SparkMax motorRight    = new SparkMax(1, MotorType.kBrushless);
   private final SparkMax motorLeft    = new SparkMax(2, MotorType.kBrushless);
-  private final RelativeEncoder m_encoder  = motorRight.getEncoder();
-
+  private final RelativeEncoder encoderRight  = motorRight.getEncoder();
+  private final RelativeEncoder encoderLeft  = motorLeft.getEncoder();
+  
    public final Trigger atMin = new Trigger(()->getLinearPosition().isNear(Inches.of(4), Inches.of(4)));
   public final Trigger atMax = new Trigger(() -> getLinearPosition().isNear(Inches.of(4),
                                                                             Inches.of(3)));
@@ -80,7 +81,7 @@ public class Elevator extends SubsystemBase {
                                                                               Constants.kElevatorKi,
                                                                                Constants.kElevatorKd,
                                                                                new Constraints(Constants.ElevatorkMaxVelocity,
-                                                                                               Constants.ElevatorkMaxAcceleration));
+                                                                                               m_feedforward.maxAchievableAcceleration(10, Constants.ElevatorkMaxVelocity)));
 
 
 
@@ -137,16 +138,24 @@ public class Elevator extends SubsystemBase {
     .inverted(false)
     .idleMode(IdleMode.kBrake);
     configRight.encoder
-    .positionConversionFactor(1000)
-    .velocityConversionFactor(1000);
+    //1:20 ratio
+    .positionConversionFactor(0.05)
+    .velocityConversionFactor(0.05);
+    configRight.signals.primaryEncoderPositionPeriodMs(20);
+    configRight.signals.primaryEncoderVelocityPeriodMs(20);
+    configRight.smartCurrentLimit(40);
+    
     motorRight.configure(configRight, null, null);
-
     configLeft
     .inverted(false)
     .idleMode(IdleMode.kBrake);
     configLeft.encoder
-    .positionConversionFactor(1000)
-    .velocityConversionFactor(1000);
+    //1:20 ratio
+    .positionConversionFactor(0.05)
+    .velocityConversionFactor(0.05);
+    configLeft.signals.primaryEncoderPositionPeriodMs(20);
+    configLeft.signals.primaryEncoderVelocityPeriodMs(20);
+    configLeft.smartCurrentLimit(40);
     motorLeft.configure(configLeft, null, null);
   }
 
@@ -159,16 +168,17 @@ public class Elevator extends SubsystemBase {
 
 
   double getHeightMeters(){
-    SmartDashboard.putNumber("raw elevator height", m_encoder.getPosition());
-    SmartDashboard.putNumber("raw elevator height", m_encoder.getPosition());
-    return m_encoder.getPosition();
+    double position = (encoderRight.getPosition()+encoderLeft.getPosition())/2;
+    SmartDashboard.putNumber("raw elevator height", position);
+    SmartDashboard.putNumber("raw elevator height", position);
+    return position;
 
 
 
   }
 
   double getVelocityMetersPerSecond(){
-    return m_encoder.getVelocity();
+    return (encoderRight.getVelocity()+encoderLeft.getVelocity())/2;
   }
 
    public Command runSysIdRoutine(){
