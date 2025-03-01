@@ -45,18 +45,6 @@ public class DriveCommand extends Command {
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
-  public DriveCommand(DriveSub driveS, DoubleSupplier xSpeed, DoubleSupplier ySpeed) {
-    drive = driveS;
-    this.xSpeed=xSpeed;
-    this.ySpeed=ySpeed;
-    this.turningSpeed = ()->0;
-    
-
-    
-    addRequirements(drive);
-    // Use addRequirements() here to declare subsystem dependencies.
-  }
-
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
