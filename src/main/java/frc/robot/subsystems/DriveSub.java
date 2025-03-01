@@ -124,6 +124,12 @@ public class DriveSub extends SubsystemBase {
     return Rotation2d.fromDegrees(getHeading());
   }
 
+  public Rotation2d getRawRotation2d(){
+    return Rotation2d.fromDegrees(getRawHeading());
+  }
+
+
+
   public void setSpeed(double speed, double turningSpeed){
     for (int i=0;i<modules.length;i++)
     modules[i].setSpeed(speed, turningSpeed);
@@ -135,7 +141,6 @@ public class DriveSub extends SubsystemBase {
   public double getHeading(){
     //invert gyro yaw reading
     double angle = (gyro.getYaw()*-1);
-    SmartDashboard.putNumber("raw heading", angle);
     angle = angle+robotOffset;
     
 
@@ -150,6 +155,12 @@ public class DriveSub extends SubsystemBase {
 
     return angle;
 
+  }
+
+  public double getRawHeading(){
+    double angle = (gyro.getYaw()*-1);
+    SmartDashboard.putNumber("raw heading", angle);
+    return angle;
   }
 
 
