@@ -12,6 +12,9 @@ import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.DriveSub;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.ExampleSubsystem;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -63,7 +66,8 @@ public class RobotContainer {
     drive.setDefaultCommand(new DriveCommand(drive,()->m_driverController.getLeftY(), ()->m_driverController.getLeftX(), ()->m_driverController.getRightX(), ()->m_driverController.getHID().getAButton(), ()->op_drivController.getHID().getBButton()));
     //debugging commands
     elevator.setDefaultCommand(new ElevatorOver(elevator, ()->op_drivController.getRightY(), ()->op_drivController.getLeftY()));
-    
+    //test on the fly auto
+    m_driverController.a().onTrue(AutoBuilder.followPath(drive.generatePath))
     
   }
 

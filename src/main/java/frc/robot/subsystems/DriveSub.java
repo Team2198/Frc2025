@@ -185,6 +185,8 @@ public class DriveSub extends SubsystemBase {
 
   
 
+  
+
   public void zeroYaw(){
     gyro.zeroYaw();
   }
@@ -193,7 +195,7 @@ public class DriveSub extends SubsystemBase {
 
 
   public Pose2d getPose(){
-     
+    
     return odometry.getEstimatedPosition();
   }
 
@@ -323,6 +325,15 @@ public class DriveSub extends SubsystemBase {
       
       
     } 
+    return positionPidController.atSetpoint();
+
+  }
+
+  public boolean followPathNew(double target, double angle){
+
+    ChassisSpeeds currChassisSpeeds = kinematics.toChassisSpeeds(getModuleStates());
+    double linearVelocity = positionPidController.calculate(getDrivePosition(), target);
+    
     return positionPidController.atSetpoint();
 
   }
