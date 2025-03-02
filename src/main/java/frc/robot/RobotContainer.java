@@ -67,7 +67,7 @@ public class RobotContainer {
     //debugging commands
     elevator.setDefaultCommand(new ElevatorOver(elevator, ()->op_drivController.getRightY(), ()->op_drivController.getLeftY()));
     //test on the fly auto
-    m_driverController.a().onTrue(AutoBuilder.followPath(drive.generatePath))
+    m_driverController.a().onTrue(AutoBuilder.followPath(drive.generatePathToReef()));
     
   }
 

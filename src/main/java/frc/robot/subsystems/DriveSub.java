@@ -45,6 +45,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.net.PortForwarder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.units.MutableMeasure;
@@ -63,13 +64,22 @@ import edu.wpi.first.math.Vector;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.List;
 import java.util.Optional;
 
 
 
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.controllers.PathFollowingController;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.networktables.StructArrayPublisher;
@@ -101,11 +111,55 @@ public class DriveSub extends SubsystemBase {
  // PIDController pidController = new PIDController(0.007, 0, 0);
   PIDController pidController = new PIDController(0.007,0,0);
   SwerveDrivePoseEstimator odometry;
+
+  PIDController newPositionController = new PIDController(4/12*4.86, 0,0);
+
+  
+  
+  private Field2d field = new Field2d();
+  
   public DriveSub() {
     positionPidController.setTolerance(0.1);
     pidController.enableContinuousInput(-180, 180);
     pidController.setTolerance(4);
     robotRelative(0, 0, 0);
+
+    try{
+      RobotConfig config = RobotConfig.fromGUISettings();
+
+      // Configure AutoBuilder
+      AutoBuilder.configure(
+        this::getPose, 
+        this::resetOdometry, 
+        this::getSpeeds, 
+        this::driveRobotRelative, 
+        new PPHolonomicDriveController(
+          new PIDConstants(5.0, 0.0, 0.0),
+          new PIDConstants(5.0, 0.0, 0.0)
+        ),
+        config,
+        () -> {
+            // Boolean supplier that controls when the path will be mirrored for the red alliance
+            // This will flip the path being followed to the red side of the field.
+            // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+            var alliance = DriverStation.getAlliance();
+            if (alliance.isPresent()) {
+                return alliance.get() == DriverStation.Alliance.Red;
+            }
+            return false;
+        },
+        this
+      );
+    }catch(Exception e){
+      DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder", e.getStackTrace());
+    }
+
+    // Set up custom logging to add the current path to a field 2d widget
+    PathPlannerLogging.setLogActivePathCallback((poses) -> field.getObject("path").setPoses(poses));
+
+    SmartDashboard.putData("Field", field);
+
 
   }
 
@@ -185,17 +239,27 @@ public class DriveSub extends SubsystemBase {
 
   
 
-  
-
   public void zeroYaw(){
     gyro.zeroYaw();
+  }
+
+
+  public void driveFieldRelative(ChassisSpeeds fieldRelativeSpeeds) {
+    driveRobotRelative(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeSpeeds, getPose().getRotation()));
+  }
+
+  public void driveRobotRelative(ChassisSpeeds robotRelativeSpeeds) {
+    ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, 0.02);
+
+    
+    setModuleStates(targetSpeeds);
   }
 
   
 
 
   public Pose2d getPose(){
-    
+     
     return odometry.getEstimatedPosition();
   }
 
@@ -329,15 +393,6 @@ public class DriveSub extends SubsystemBase {
 
   }
 
-  public boolean followPathNew(double target, double angle){
-
-    ChassisSpeeds currChassisSpeeds = kinematics.toChassisSpeeds(getModuleStates());
-    double linearVelocity = positionPidController.calculate(getDrivePosition(), target);
-    
-    return positionPidController.atSetpoint();
-
-  }
-
   public void zeroEncoders(){
     for (int i=0;i<modules.length;i++){
       modules[i].zeroDrive(); 
@@ -391,4 +446,49 @@ public class DriveSub extends SubsystemBase {
 
   }
 
+
+
+  public PathPlannerPath generatePathToReef(){
+    //vision logic here
+    //important thread: https://www.chiefdelphi.com/t/pathplanners-pathfinding-not-working-for-close-pose-estimation/484786/2
+    //https://pathplanner.dev/pplib-create-a-path-on-the-fly.html
+    // Create a list of waypoints from poses. Each pose represents one waypoint.
+    //The rotation component of the pose should be the direction of travel. Do not use holonomic rotation.
+    //the rotation component should be calculated from x and y components
+    List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
+          new Pose2d(1.0, 1.0, Rotation2d.fromDegrees(0)),
+          new Pose2d(3.0, 1.0, Rotation2d.fromDegrees(0)),
+          new Pose2d(5.0, 3.0, Rotation2d.fromDegrees(90))
+    );
+
+    PathConstraints constraints = new PathConstraints(3.0, 10/3, 2 * Math.PI, 4 * Math.PI); // The constraints for this path.
+    // PathConstraints constraints = PathConstraints.unlimitedConstraints(12.0); // You can also use unlimited constraints, only limited by motor torque and nominal battery voltage
+
+    // Create the path using the waypoints created above
+    PathPlannerPath path = new PathPlannerPath(
+            waypoints,
+            constraints,
+            null, // The ideal starting state, this is only relevant for pre-planned paths, so can be null for on-the-fly paths.
+            new GoalEndState(0.0, Rotation2d.fromDegrees(-90)) // Goal end state. You can set a holonomic rotation here. If using a differential drivetrain, the rotation will have no effect.
+    );
+
+    // Prevent the path from being flipped if the coordinates are already correct
+
+    //alliance logic
+    path.preventFlipping = true;
+
+    return path;
+  }
+
+  public boolean followPathNew(double target, double relativeAngle){
+
+    
+    double linearVelocity = newPositionController.calculate(getDrivePosition(), target);
+    robotRelative(Math.sin(relativeAngle*Math.PI/180)*linearVelocity,Math.cos(relativeAngle*Math.PI/180)*linearVelocity,0);
+
+    return newPositionController.atSetpoint();
+
+  }
+
+  
 }
