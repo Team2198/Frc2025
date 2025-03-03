@@ -9,6 +9,7 @@ import frc.robot.subsystems.DriveSub;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import java.util.Arrays;
 
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
@@ -35,7 +36,7 @@ public class AlignAprilTag extends Command {
       double y = botPose[1];
       Rotation2d yaw = Rotation2d.fromDegrees(botPose[5]); //you will have to test whether or not you need to negative it 
 
-      SmartDashboard.putNumber("limelight yaw", botPose[5]);
+      SmartDashboard.putString("limelight yaw", Arrays.toString(botPose));
       
       drive.followPathNew(new Pose2d(x, y, yaw));
     }
