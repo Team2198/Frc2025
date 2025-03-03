@@ -59,7 +59,7 @@ public class Algae extends SubsystemBase {
     configPivot.signals.primaryEncoderVelocityPeriodMs(100);
 
     confightLeft
-    .inverted(true)
+    .inverted(false)
     .idleMode(IdleMode.kCoast);
     configPivot.encoder
     .positionConversionFactor(1/20)
