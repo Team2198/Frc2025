@@ -34,9 +34,9 @@ public final class Constants {
     public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
   }
 
-public static final double ElevatorkMaxVelocity = 0;
+public static final double ElevatorkMaxVelocity = 0.1;
 
-public static final double ElevatorkMaxAcceleration = 0;
+
 
 public static double kElevatorKp;
 public static double kElevatorKi;

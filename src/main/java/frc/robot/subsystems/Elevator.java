@@ -48,20 +48,23 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 public class Elevator extends SubsystemBase {
 
 
-  private final SparkFlex        m_motor    = new SparkFlex(1, MotorType.kBrushless);
-  private final RelativeEncoder m_encoder  = m_motor.getEncoder();
-
+  private final SparkMax motorRight    = new SparkMax(1, MotorType.kBrushless);
+  private final SparkMax motorLeft    = new SparkMax(2, MotorType.kBrushless);
+  private final RelativeEncoder encoderRight  = motorRight.getEncoder();
+  private final RelativeEncoder encoderLeft  = motorLeft.getEncoder();
+  
    public final Trigger atMin = new Trigger(()->getLinearPosition().isNear(Inches.of(4), Inches.of(4)));
   public final Trigger atMax = new Trigger(() -> getLinearPosition().isNear(Inches.of(4),
                                                                             Inches.of(3)));
-  SparkMaxConfig config = new SparkMaxConfig();
+  SparkMaxConfig configRight = new SparkMaxConfig();
+  SparkMaxConfig configLeft= new SparkMaxConfig();
   /** Creates a new Elevator. */
    // SysId Routine and seutp
   // Mutable holder for unit-safe voltage values, persisted to avoid reallocation.
   private final MutVoltage        m_appliedVoltage = Volts.mutable(0);
   // Mutable holder for unit-safe linear distance values, persisted to avoid reallocation.
   private final MutDistance       m_distance       = Meters.mutable(0);
-  private final MutAngle          m_rotations      = Rotations.mutable(0);
+  
   // Mutable holder for unit-safe linear velocity values, persisted to avoid reallocation.
   private final MutLinearVelocity m_velocity       = MetersPerSecond.mutable(0);
 
@@ -78,7 +81,7 @@ public class Elevator extends SubsystemBase {
                                                                               Constants.kElevatorKi,
                                                                                Constants.kElevatorKd,
                                                                                new Constraints(Constants.ElevatorkMaxVelocity,
-                                                                                               Constants.ElevatorkMaxAcceleration));
+                                                                                               m_feedforward.maxAchievableAcceleration(10, Constants.ElevatorkMaxVelocity)));
 
 
 
@@ -93,31 +96,67 @@ public class Elevator extends SubsystemBase {
                                   Seconds.of(10)),
           new SysIdRoutine.Mechanism(
               // Tell SysId how to plumb the driving voltage to the motor(s).
-              m_motor::setVoltage,
+              voltage -> {
+                motorRight.setVoltage(voltage);
+                motorLeft.setVoltage(voltage);
+              },
               // Tell SysId how to record a frame of data for each motor on the mechanism being
               // characterized.
               log -> {
                 // Record a frame for the shooter motor.
-                log.motor("elevator")
+                log.motor("elevator right")
                    .voltage(
                        m_appliedVoltage.mut_replace(
-                           m_motor.getAppliedOutput() * RobotController.getBatteryVoltage(), Volts))
+                           motorRight.getAppliedOutput() * RobotController.getBatteryVoltage(), Volts))
                    .linearPosition(m_distance.mut_replace(getHeightMeters(),
                                                           Meters)) // Records Height in Meters via SysIdRoutineLog.linearPosition
                    .linearVelocity(m_velocity.mut_replace(getVelocityMetersPerSecond(),
                                                           MetersPerSecond)); // Records velocity in MetersPerSecond via SysIdRoutineLog.linearVelocity
+                
+                log.motor("elevator left")
+                    .voltage(
+                        m_appliedVoltage.mut_replace(
+                            motorLeft.getAppliedOutput() * RobotController.getBatteryVoltage(), Volts))
+                    .linearPosition(m_distance.mut_replace(getHeightMeters(),
+                                                           Meters)) // Records Height in Meters via SysIdRoutineLog.linearPosition
+                    .linearVelocity(m_velocity.mut_replace(getVelocityMetersPerSecond(),
+                                                           MetersPerSecond)); // Records velocity in MetersPerSecond via SysIdRoutineLog.linearVelocity
+                  
+              
+              
+              
+              
+              
+              
+              
               },
               this));
 
   
   public Elevator() {
-    config
+    configRight
     .inverted(false)
     .idleMode(IdleMode.kBrake);
-config.encoder
-    .positionConversionFactor(1000)
-    .velocityConversionFactor(1000);
-
+    configRight.encoder
+    //1:20 ratio
+    .positionConversionFactor(0.05)
+    .velocityConversionFactor(0.05);
+    configRight.signals.primaryEncoderPositionPeriodMs(20);
+    configRight.signals.primaryEncoderVelocityPeriodMs(20);
+    configRight.smartCurrentLimit(40);
+    
+    motorRight.configure(configRight, null, null);
+    configLeft
+    .inverted(false)
+    .idleMode(IdleMode.kBrake);
+    configLeft.encoder
+    //1:20 ratio
+    .positionConversionFactor(0.05)
+    .velocityConversionFactor(0.05);
+    configLeft.signals.primaryEncoderPositionPeriodMs(20);
+    configLeft.signals.primaryEncoderVelocityPeriodMs(20);
+    configLeft.smartCurrentLimit(40);
+    motorLeft.configure(configLeft, null, null);
   }
 
   @Override
@@ -129,15 +168,17 @@ config.encoder
 
 
   double getHeightMeters(){
-    
-    return m_encoder.getPosition();
+    double position = (encoderRight.getPosition()+encoderLeft.getPosition())/2;
+    SmartDashboard.putNumber("raw elevator height", position);
+    SmartDashboard.putNumber("raw elevator height", position);
+    return position;
 
 
 
   }
 
   double getVelocityMetersPerSecond(){
-    return m_encoder.getVelocity();
+    return (encoderRight.getVelocity()+encoderLeft.getVelocity())/2;
   }
 
    public Command runSysIdRoutine(){
@@ -155,8 +196,23 @@ config.encoder
   }
 
   public void setVoltage(double voltage){
-    m_motor.setVoltage(voltage);
-    Shuffleboard.getTab("Elevator").add("Voltage", voltage);
+    motorRight.setVoltage(voltage);
+    motorLeft.setVoltage(voltage);
+    SmartDashboard.putNumber("Elevator voltage", voltage);
+  }
+
+  public void setRight(double voltage){
+    motorRight.setVoltage(voltage);
+    
+    
+
+  }
+
+  public void setLeft(double voltage){
+    motorLeft.setVoltage(voltage);
+    
+    
+
   }
 
   public void setHeight(double height){
