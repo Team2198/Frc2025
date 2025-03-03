@@ -33,6 +33,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -92,9 +93,10 @@ public class DriveSub extends SubsystemBase {
   PIDController positionPidController = new PIDController(4,0,0);
   int counter=0;
   double dimension = Units.inchesToMeters(27/2);
+  double dimensionTwo = Units.inchesToMeters(32/2);
   //private final SwerveModule backLeft = new SwerveModule(20, 21, 26, 0.268311, true, "back left", 0.015, 2.4978);
   private final SwerveModule backLeft = new SwerveModule(20, 21, 26, 0.261963, true, "back left", 0.015, 2.4978);
-  SwerveDriveKinematics kinematics = new SwerveDriveKinematics(new Translation2d(dimension,dimension), new Translation2d(dimension,-dimension), new Translation2d(-dimension,dimension), new Translation2d(-dimension,-dimension));
+  SwerveDriveKinematics kinematics = new SwerveDriveKinematics(new Translation2d(dimensionTwo,dimension), new Translation2d(dimensionTwo,-dimension), new Translation2d(-dimensionTwo,dimension), new Translation2d(-dimensionTwo,-dimension));
   //private final SwerveModule backRight = new SwerveModule(14, 15, 22,0.133301, true, "back right", 0.015, 2.46);
   private final SwerveModule backRight = new SwerveModule(14, 15, 22,0.128418, true, "back right", 0.015, 2.46);
   private final SwerveModule[] modules = {frontLeft, frontRight, backLeft, backRight};
@@ -112,7 +114,9 @@ public class DriveSub extends SubsystemBase {
   PIDController pidController = new PIDController(0.007,0,0);
   SwerveDrivePoseEstimator odometry;
 
-  PIDController newPositionController = new PIDController(4/12*4.86, 0,0);
+  PIDController yPidController = new PIDController(4/12*4.86, 0,0);
+  PIDController xPidController = new PIDController(4/12*4.86, 0,0);
+  PIDController turningPidController = new PIDController(0.007, 0,0);
 
   
   
@@ -122,6 +126,9 @@ public class DriveSub extends SubsystemBase {
     positionPidController.setTolerance(0.1);
     pidController.enableContinuousInput(-180, 180);
     pidController.setTolerance(4);
+    turningPidController.setTolerance(0.1);
+    turningPidController.enableContinuousInput(-180, 180);
+    turningPidController.setTolerance(4);
     robotRelative(0, 0, 0);
 
     try{
@@ -337,6 +344,12 @@ public class DriveSub extends SubsystemBase {
     setModuleStates(speeds);
   }
 
+  public void resetPidController(){
+    xPidController.reset();
+    yPidController.reset();
+    turningPidController.reset();
+  }
+
   
 
   public void setAngle(double angle){
@@ -446,7 +459,25 @@ public class DriveSub extends SubsystemBase {
 
   }
 
+  public double findLinearDist(Pose2d target){
+    
+    double dist = target.minus(getPose()).getTranslation().getDistance(new Translation2d());
+    return dist;
+    
+  }
 
+  public Pose2d reefEndPose(){
+    //this transform is the limelight transform
+    Transform2d transform = new Transform2d(
+    new Translation2d(1.0, 0.5), // Translation (x, y)
+    new Rotation2d(Math.toRadians(30)) // Rotation in radians
+    );
+
+    // New pose relative to the current pose
+    Pose2d newPose = getPose().transformBy(transform);
+    return newPose;    
+    //use this pose to find distance remaining to reef
+  }
 
   public PathPlannerPath generatePathToReef(){
     //vision logic here
@@ -479,14 +510,20 @@ public class DriveSub extends SubsystemBase {
 
     return path;
   }
-
-  public boolean followPathNew(double target, double relativeAngle){
+  //this method needs the reef pose relative to the current robot pose
+  //use limelight data to generate a target pose relative to current robot pose
+  //dont forget to take into account that limelight will return camera to target pose
+  //we need robot to target pose
+  public boolean followPathNew(Pose2d target){
 
     
-    double linearVelocity = newPositionController.calculate(getDrivePosition(), target);
-    robotRelative(Math.sin(relativeAngle*Math.PI/180)*linearVelocity,Math.cos(relativeAngle*Math.PI/180)*linearVelocity,0);
+    double xSpeed = xPidController.calculate(getPose().getX(), target.getX());
+    double ySpeed = yPidController.calculate(getPose().getY(), target.getY());
+    double turningSpeed = turningPidController.calculate(getPose().getRotation().getDegrees(), target.getRotation().getDegrees());
 
-    return newPositionController.atSetpoint();
+    robotRelative(xSpeed,ySpeed,turningSpeed);
+
+    return xPidController.atSetpoint() && yPidController.atSetpoint()&&turningPidController.atSetpoint();
 
   }
 
