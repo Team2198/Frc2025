@@ -176,7 +176,7 @@ public class DriveSub extends SubsystemBase {
     SmartDashboard.putNumber("yaw",getHeading());
     SmartDashboard.putNumber("robot offset", robotOffset);
     //setAngle(90);
-      
+
     odometry.update(getRotation2d(), getModulePositions());
   }
 
@@ -411,31 +411,16 @@ public class DriveSub extends SubsystemBase {
     } 
   }
 
-  public double getLimelightRY(){
-
-    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-    NetworkTableEntry ry = table.getEntry("ry");
-    double y = ry.getDouble(0);
-    SmartDashboard.putNumber("aprilTagAngle", -y);
-    return -y;
+  public boolean getLimelightTV(){
+    return NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getInteger(0) == 1; 
   }
 
-  public double getLimelightTX(){
+  public double[] getLimelightBotpose(){
 
     NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-    NetworkTableEntry tx = table.getEntry("tx");
-    double x = tx.getDouble(0);
-    SmartDashboard.putNumber("distanceFromCrosshair", -x);
-    return -x;
-  }
-
-  public double getLimelightTL(){
-
-    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-    NetworkTableEntry tl = table.getEntry("tl");
-    double l = tl.getDouble(0);
-    SmartDashboard.putNumber("distanceFromCrosshair", -l);
-    return -l;
+    NetworkTableEntry botPosition = table.getEntry("botpose_targetspace");
+    double[] botPose = botPosition.getDoubleArray(new double[6]);
+    return botPose;
   }
 
   public void setOffset(double angle){

@@ -3,18 +3,22 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.commands;
-
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.DriveSub;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class AlignAprilTagHorizontal extends Command {
+public class AlignAprilTag extends Command {
   /** Creates a new AlignAprilTagHorizontal. */
  private DriveSub drive; 
 
-  public AlignAprilTagHorizontal(DriveSub drive) {
+  public AlignAprilTag(DriveSub drive) {
     this.drive = drive; 
+    addRequirements(drive);
   }
 
   // Called when the command is initially scheduled.
@@ -25,11 +29,16 @@ public class AlignAprilTagHorizontal extends Command {
   @Override
   public void execute() {
 
-    double x = drive.getLimelightTX(); 
-    double l = drive.getLimelightTL();
+    if (this.drive.getLimelightTV()){
+      double[] botPose = this.drive.getLimelightBotpose();
+      double x = botPose[0];
+      double y = botPose[1];
+      Rotation2d yaw = Rotation2d.fromDegrees(botPose[5]); //you will have to test whether or not you need to negative it 
 
-    drive.followPath(l, drive.getHeading() + x);
-
+      SmartDashboard.putNumber("limelight yaw", botPose[5]);
+      
+      drive.followPathNew(new Pose2d(x, y, yaw));
+    }
   }
 
   // Called once the command ends or is interrupted.
