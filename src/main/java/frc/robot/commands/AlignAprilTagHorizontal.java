@@ -25,18 +25,10 @@ public class AlignAprilTagHorizontal extends Command {
   @Override
   public void execute() {
 
-    double data = drive.getLimelightTX(); 
-    
-    if (data > 0){
-      data = 0.5; 
-    }
+    double x = drive.getLimelightTX(); 
+    double l = drive.getLimelightTL();
 
-    else if (data < 0){
-      data = -0.5;
-    }
-
-    drive.robotRelative(0, data, 0);
-    SmartDashboard.putNumber("April tag horizontal direction", data);
+    drive.followPath(l, drive.getHeading() + x);
 
   }
 

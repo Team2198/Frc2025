@@ -399,8 +399,7 @@ public class DriveSub extends SubsystemBase {
     for (int i=0;i<modules.length;i++){
       modules[i].setAngle(angle);
       modules[i].followPath(positionPidController.calculate(getDrivePosition(), target));
-      
-      
+
     } 
     return positionPidController.atSetpoint();
 
@@ -428,6 +427,15 @@ public class DriveSub extends SubsystemBase {
     double x = tx.getDouble(0);
     SmartDashboard.putNumber("distanceFromCrosshair", -x);
     return -x;
+  }
+
+  public double getLimelightTL(){
+
+    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+    NetworkTableEntry tl = table.getEntry("tl");
+    double l = tl.getDouble(0);
+    SmartDashboard.putNumber("distanceFromCrosshair", -l);
+    return -l;
   }
 
   public void setOffset(double angle){
