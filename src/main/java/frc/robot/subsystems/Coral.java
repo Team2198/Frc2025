@@ -69,7 +69,7 @@ public class Coral extends SubsystemBase {
   }
 
   public void setVoltageDropper(double voltage){
-    coralDropper.setVoltage(voltage);
+    coralDropper.setVoltage(voltage); 
   }
 
 

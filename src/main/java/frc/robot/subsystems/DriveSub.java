@@ -3,6 +3,8 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.fasterxml.jackson.databind.ser.std.CalendarSerializer;
 
@@ -170,13 +172,15 @@ public class DriveSub extends SubsystemBase {
 
   }
 
+
+  
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("yaw",getHeading());
     SmartDashboard.putNumber("robot offset", robotOffset);
     //setAngle(90);
-      
+    Logger.recordOutput("Drive/Pose", getPose());
     odometry.update(getRotation2d(), getModulePositions());
   }
 

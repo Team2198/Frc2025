@@ -218,6 +218,6 @@ public class Elevator extends SubsystemBase {
   public void setHeight(double height){
     double voltage = m_controller.calculate(getHeightMeters(), height);
     voltage+= m_feedforward.calculate(m_controller.getSetpoint().velocity);
-    setVoltage(voltage);
+    setVoltage(voltage);  
   }
 }
