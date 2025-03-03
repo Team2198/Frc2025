@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class AlgaeSub extends SubsystemBase {
+public class Algae extends SubsystemBase {
   /** Creates a new Algae. */
 
   private final SparkMax motorLeft = new SparkMax(5, MotorType.kBrushless);
@@ -32,7 +32,7 @@ public class AlgaeSub extends SubsystemBase {
   DigitalInput beamBreak = new DigitalInput(0);
 
 
-  public AlgaeSub() {
+  public Algae() {
 
     //config algae pivot 
 
