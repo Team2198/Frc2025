@@ -68,7 +68,7 @@ import static edu.wpi.first.units.Units.Volts;
 import java.util.List;
 import java.util.Optional;
 
-
+import frc.robot.LimelightHelpers;
 
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -176,7 +176,7 @@ public class DriveSub extends SubsystemBase {
     SmartDashboard.putNumber("yaw",getHeading());
     SmartDashboard.putNumber("robot offset", robotOffset);
     //setAngle(90);
-      
+
     odometry.update(getRotation2d(), getModulePositions());
   }
 
@@ -399,8 +399,7 @@ public class DriveSub extends SubsystemBase {
     for (int i=0;i<modules.length;i++){
       modules[i].setAngle(angle);
       modules[i].followPath(positionPidController.calculate(getDrivePosition(), target));
-      
-      
+
     } 
     return positionPidController.atSetpoint();
 
@@ -412,24 +411,17 @@ public class DriveSub extends SubsystemBase {
     } 
   }
 
-  public double getLimelight(){
-   
-    /* PhotonPipelineResult result = noteDetectCamera.getLatestResult();
-    
-    double x = 0;
-    
-    if (result.hasTargets()){
-      x = result.getBestTarget().getYaw();
-   
-    } */
-
-    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-    NetworkTableEntry tx = table.getEntry("tx");
-    double x = tx.getDouble(0);
-    SmartDashboard.putNumber("note angle", -x);
-    return -x;
+  public boolean getLimelightTV(){
+    return NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getInteger(0) == 1; 
   }
 
+  public double[] getLimelightBotpose(){
+
+    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+    NetworkTableEntry botPosition = table.getEntry("botpose_targetspace");
+    double[] botPose = botPosition.getDoubleArray(new double[6]);
+    return botPose;
+  }
 
   public void setOffset(double angle){
     robotOffset = angle;
