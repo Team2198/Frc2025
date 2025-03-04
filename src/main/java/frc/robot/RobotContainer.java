@@ -66,6 +66,7 @@ public class RobotContainer {
     drive.setDefaultCommand(new DriveCommand(drive,()->m_driverController.getLeftY(), ()->m_driverController.getLeftX(), ()->m_driverController.getRightX(), ()->m_driverController.getHID().getAButton(), ()->op_drivController.getHID().getBButton()));
     //debugging commands
     elevator.setDefaultCommand(new ElevatorOver(elevator, ()->op_drivController.getRightY(), ()->op_drivController.getLeftY()));
+    //elevator.setDefaultCommand(new ElevatorOver(elevator,()->op_drivController.getLeftY()));
     //test on the fly auto
     m_driverController.a().onTrue(AutoBuilder.followPath(drive.generatePathToReef()));
     

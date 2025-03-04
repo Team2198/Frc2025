@@ -23,6 +23,14 @@ public class ElevatorOver extends Command {
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
+  public ElevatorOver(Elevator elevator, DoubleSupplier SpeedOverall) {
+    speedRight = SpeedOverall.getAsDouble();
+    speedLeft = SpeedOverall.getAsDouble();
+    elevatorSub = elevator;
+    addRequirements(elevatorSub);
+    // Use addRequirements() here to declare subsystem dependencies.
+  }
+
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {}
