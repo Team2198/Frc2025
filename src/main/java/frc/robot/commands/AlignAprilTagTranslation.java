@@ -13,12 +13,14 @@ import java.util.Arrays;
 
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class AlignAprilTag extends Command {
+public class AlignAprilTagTranslation extends Command {
   /** Creates a new AlignAprilTagHorizontal. */
  private DriveSub drive; 
+ private int pipeLine;
 
-  public AlignAprilTag(DriveSub drive) {
+  public AlignAprilTagTranslation(DriveSub drive, int pipeLine) {
     this.drive = drive; 
+    this.pipeLine = pipeLine; 
     addRequirements(drive);
   }
 
@@ -30,15 +32,14 @@ public class AlignAprilTag extends Command {
   @Override
   public void execute() {
 
+    drive.changeLimelightPipeLine(pipeLine);
+
     if (this.drive.getLimelightTV()){
       double[] botPose = this.drive.getLimelightBotpose();
       double x = botPose[0];
-      double y = botPose[1];
-      Rotation2d yaw = Rotation2d.fromDegrees(botPose[5]); //you will have to test whether or not you need to negative it 
-
-      SmartDashboard.putString("limelight yaw", Arrays.toString(botPose));
+      double z = botPose[2]; 
       
-      drive.followPathNew(new Pose2d(x, y, yaw));
+      drive.followPathNew(new Pose2d(x, z, new Rotation2d(0)));
     }
   }
 

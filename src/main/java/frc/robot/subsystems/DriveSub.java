@@ -107,7 +107,9 @@ public class DriveSub extends SubsystemBase {
   private final MutDistance m_distance = Meters.mutable(0);
   // Mutable holder for unit-safe linear velocity values, persisted to avoid reallocation.
   private final LinearVelocity  m_velocity = MetersPerSecond.of(0);
-  
+  private int limeLightPipeLine = 0;
+
+
   boolean keepTurning = false;
   double robotOffset = 0;
  // PIDController pidController = new PIDController(0.007, 0, 0);
@@ -411,6 +413,12 @@ public class DriveSub extends SubsystemBase {
     } 
   }
 
+  public void changeLimelightPipeLine(int pipeLine){
+    if (this.limeLightPipeLine != pipeLine){
+      LimelightHelpers.setPipelineIndex("", pipeLine);
+    }
+  }
+
   public boolean getLimelightTV(){
     return NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getInteger(0) == 1; 
   }
@@ -422,6 +430,7 @@ public class DriveSub extends SubsystemBase {
     double[] botPose = botPosition.getDoubleArray(new double[6]);
     return botPose;
   }
+
 
   public void setOffset(double angle){
     robotOffset = angle;
