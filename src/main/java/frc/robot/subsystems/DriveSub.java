@@ -68,6 +68,8 @@ import static edu.wpi.first.units.Units.Volts;
 import java.util.List;
 import java.util.Optional;
 
+import org.littletonrobotics.junction.Logger;
+
 import frc.robot.LimelightHelpers;
 
 
@@ -178,6 +180,7 @@ public class DriveSub extends SubsystemBase {
     SmartDashboard.putNumber("yaw",getHeading());
     SmartDashboard.putNumber("robot offset", robotOffset);
     //setAngle(90);
+    Logger.recordOutput("Drive/Pose", getPose());
 
     odometry.update(getRotation2d(), getModulePositions());
   }
