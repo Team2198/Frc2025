@@ -220,7 +220,12 @@ public class Elevator extends SubsystemBase {
 
   public void setHeight(double height){
     double voltage = m_controller.calculate(getHeightMeters(), height);
-    voltage+= m_feedforward.calculate(m_controller.getSetpoint().velocity);
+    voltage+= m_feedforward.calculateWithVelocities(getVelocityMetersPerSecond(),m_controller.getSetpoint().velocity);
     setVoltage(voltage);
+  }
+
+
+  public ProfiledPIDController getPidController(){
+    return m_controller;
   }
 }
