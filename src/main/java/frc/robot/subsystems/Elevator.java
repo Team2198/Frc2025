@@ -51,8 +51,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 public class Elevator extends SubsystemBase {
 
 
-  private final SparkMax motorRight    = new SparkMax(1, MotorType.kBrushless);
-  private final SparkMax motorLeft    = new SparkMax(2, MotorType.kBrushless);
+  private final SparkMax motorRight    = new SparkMax(7, MotorType.kBrushless);
+  private final SparkMax motorLeft    = new SparkMax(11, MotorType.kBrushless);
   private final RelativeEncoder encoderRight  = motorRight.getEncoder();
   private final RelativeEncoder encoderLeft  = motorLeft.getEncoder();
   
@@ -152,10 +152,10 @@ public class Elevator extends SubsystemBase {
     configLeft
     .inverted(false)
     .idleMode(IdleMode.kBrake);
-    configLeft.encoder
+   /*  configLeft.encoder
     //1:20 ratio
     .positionConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI)
-    .velocityConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI);
+    .velocityConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI); */
     configLeft.signals.primaryEncoderPositionPeriodMs(20);
     configLeft.signals.primaryEncoderVelocityPeriodMs(20);
     configLeft.smartCurrentLimit(40);

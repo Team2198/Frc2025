@@ -5,31 +5,26 @@
 package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
-
+import frc.robot.subsystems.Coral;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.Algae;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class ElevatorOver extends Command {
-  /** Creates a new ElevatorOver. */
-  Elevator elevatorSub;
+public class CoralOver extends Command {
+  /** Creates a new CoralOver. */
+  Coral coral;
   DoubleSupplier speedRight;
   DoubleSupplier speedLeft;
-  public ElevatorOver(Elevator elevator, DoubleSupplier SpeedRight, DoubleSupplier SpeedLeft) {
+  double counter=0;
+  public CoralOver(Coral CoralSub,DoubleSupplier SpeedRight, DoubleSupplier SpeedLeft) {
     speedRight = SpeedRight;
     speedLeft = SpeedLeft;
-    elevatorSub = elevator;
-    addRequirements(elevatorSub);
+    coral = CoralSub;
+    addRequirements(coral);
     // Use addRequirements() here to declare subsystem dependencies.
-  }
 
-  public ElevatorOver(Elevator elevator, DoubleSupplier SpeedOverall) {
-    speedRight = SpeedOverall;    
-    speedLeft = SpeedOverall;
-    elevatorSub = elevator;
-    addRequirements(elevatorSub);
-    // Use addRequirements() here to declare subsystem dependencies.
+    //coral pivot angle - 67.6 deg 
   }
 
   // Called when the command is initially scheduled.
@@ -39,11 +34,13 @@ public class ElevatorOver extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    elevatorSub.setLeft(speedRight.getAsDouble()*12);
-    SmartDashboard.putNumber("voltage", speedRight.getAsDouble());
-    //elevatorSub.setLeft(speedLeft);
+    SmartDashboard.putNumber("counter", counter);
+    counter+=1;
+    SmartDashboard.putNumber("voltage", speedLeft.getAsDouble());
+    SmartDashboard.putNumber("voltage pivot", speedRight.getAsDouble()*6);
+    //coral.setVoltagePivot(0.5);
+    //coral.setVoltageDropper(speedLeft.getAsDouble()*6); // -0.28
   }
-
 
   // Called once the command ends or is interrupted.
   @Override

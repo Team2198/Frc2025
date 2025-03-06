@@ -20,9 +20,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Algae extends SubsystemBase {
   /** Creates a new Algae. */
 
-  private final SparkMax motorLeft = new SparkMax(5, MotorType.kBrushless);
-  private final SparkMax motorRight = new SparkMax(6, MotorType.kBrushless);
-  private final SparkMax motorPivot = new SparkMax(7, MotorType.kBrushless);
+  private final SparkMax motorLeft = new SparkMax(1, MotorType.kBrushless);
+  private final SparkMax motorRight = new SparkMax(5, MotorType.kBrushless);
+  private final SparkMax motorPivot = new SparkMax(4, MotorType.kBrushless);
   private final RelativeEncoder pivotEncoder  = motorPivot.getEncoder();
   private boolean beamBroken = false;
   PIDController pivotPid = new PIDController(0, 0, 0);
@@ -36,12 +36,12 @@ public class Algae extends SubsystemBase {
 
     //config algae pivot 
 
-    configPivot
+    /* configPivot
     .inverted(false)
     .idleMode(IdleMode.kCoast);
     configPivot.encoder
-    .positionConversionFactor(1/48)
-    .velocityConversionFactor(1/48);
+    .positionConversionFactor(1/48);
+    //.velocityConversionFactor(1/48);
     configPivot.smartCurrentLimit(30);
     configPivot.signals.primaryEncoderVelocityPeriodMs(100);
     
@@ -68,7 +68,7 @@ public class Algae extends SubsystemBase {
     configPivot.signals.primaryEncoderVelocityPeriodMs(100);
     
     motorRight.configure(configRight, null, null);
-    motorRight.configure(configRight, null, null);
+    motorRight.configure(configRight, null, null); */
   }
 
   public void rotatePivot(double angle){
@@ -109,5 +109,20 @@ public class Algae extends SubsystemBase {
     // This method will be called once per scheduler run
 
     checkBeamStatus();
+  }
+
+
+  public void setRight(double voltage){
+    motorRight.setVoltage(voltage);
+    
+    
+
+  }
+
+  public void setLeft(double voltage){
+    motorLeft.setVoltage(voltage);
+    
+    
+    
   }
 }
