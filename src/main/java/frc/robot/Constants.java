@@ -34,21 +34,21 @@ public final class Constants {
     public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
   }
 
-public static final double ElevatorkMaxVelocity = 0.1;
+public static final double ElevatorkMaxVelocity = 0.3;
 
 
 
-public static double kElevatorKp;
-public static double kElevatorKi;
-public static double kElevatorKd;
+public static double kElevatorKp=0.0183;
+public static double kElevatorKi=0;
+public static double kElevatorKd=0;
 
-public static double kElevatorkS;
+public static double kElevatorkS = 0.45;
 
-public static double kElevatorkG;
+public static double kElevatorkG=0.316145;
 
-public static double kElevatorkV;
+public static double kElevatorkV=0.12;
 
-public static double kElevatorkA;
+public static double kElevatorkA=0.018;
 
 
 }

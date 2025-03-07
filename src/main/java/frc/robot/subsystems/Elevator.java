@@ -5,6 +5,7 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.util.Units;
@@ -56,13 +57,14 @@ public class Elevator extends SubsystemBase {
   private final RelativeEncoder encoderRight  = motorRight.getEncoder();
   private final RelativeEncoder encoderLeft  = motorLeft.getEncoder();
   
-   public final Trigger atMin = new Trigger(()->getLinearPosition().isNear(Inches.of(4), Inches.of(4)));
-  public final Trigger atMax = new Trigger(() -> getLinearPosition().isNear(Inches.of(4),
-                                                                            Inches.of(3)));
+   public final Trigger atMin = new Trigger(()->getLinearPosition().isNear(Inches.of(5), Inches.of(1)));
+  public final Trigger atMax = new Trigger(() -> getLinearPosition().isNear(Inches.of(40),
+                                                                            Inches.of(1)));
   SparkMaxConfig configRight = new SparkMaxConfig();
   SparkMaxConfig configLeft= new SparkMaxConfig();
   /** Creates a new Elevator. */
    // SysId Routine and seutp
+   double totalVoltage = 0;
   // Mutable holder for unit-safe voltage values, persisted to avoid reallocation.
   private final MutVoltage        m_appliedVoltage = Volts.mutable(0);
   // Mutable holder for unit-safe linear distance values, persisted to avoid reallocation.
@@ -71,8 +73,8 @@ public class Elevator extends SubsystemBase {
   // Mutable holder for unit-safe linear velocity values, persisted to avoid reallocation.
   private final MutLinearVelocity m_velocity       = MetersPerSecond.mutable(0);
 
-
-
+  PIDController elevatorController = new PIDController(0.4,0,0);
+  
   ElevatorFeedforward m_feedforward =
       new ElevatorFeedforward(
           Constants.kElevatorkS,
@@ -84,7 +86,8 @@ public class Elevator extends SubsystemBase {
                                                                               Constants.kElevatorKi,
                                                                                Constants.kElevatorKd,
                                                                                new Constraints(Constants.ElevatorkMaxVelocity,
-                                                                                               m_feedforward.maxAchievableAcceleration(10, Constants.ElevatorkMaxVelocity)));
+                                                                                               m_feedforward.maxAchievableAcceleration(12, Constants.ElevatorkMaxVelocity)));
+
 
 
 
@@ -138,12 +141,13 @@ public class Elevator extends SubsystemBase {
   
   public Elevator() {
     configRight
-    .inverted(false)
+    .inverted(true)
     .idleMode(IdleMode.kBrake);
     configRight.encoder
     //1:20 ratio
-    .positionConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI)
-    .velocityConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI);
+    
+    .positionConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI*2)
+    .velocityConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI*2);
     configRight.signals.primaryEncoderPositionPeriodMs(20);
     configRight.signals.primaryEncoderVelocityPeriodMs(20);
     configRight.smartCurrentLimit(40);
@@ -152,19 +156,21 @@ public class Elevator extends SubsystemBase {
     configLeft
     .inverted(false)
     .idleMode(IdleMode.kBrake);
-   /*  configLeft.encoder
+    configLeft.encoder
     //1:20 ratio
-    .positionConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI)
-    .velocityConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI); */
+    .positionConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI*2)
+    .velocityConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI*2);
     configLeft.signals.primaryEncoderPositionPeriodMs(20);
     configLeft.signals.primaryEncoderVelocityPeriodMs(20);
     configLeft.smartCurrentLimit(40);
     motorLeft.configure(configLeft, null, null);
+    elevatorController.setTolerance(1);
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    SmartDashboard.putNumber("velocity elevator", getVelocityMetersPerSecond());
     SmartDashboard.putNumber("Elevator Height", getHeightMeters());
     
   }
@@ -174,6 +180,12 @@ public class Elevator extends SubsystemBase {
     double position = (encoderRight.getPosition()+encoderLeft.getPosition())/2;
     SmartDashboard.putNumber("raw elevator height", position);
     SmartDashboard.putNumber("raw elevator height", position);
+    SmartDashboard.putNumber("left elevator height", encoderLeft.getPosition());
+    SmartDashboard.putNumber("right elevator height", encoderRight.getPosition());
+    SmartDashboard.putNumber("raw elevator height inches", Units.metersToInches(position));
+    SmartDashboard.putNumber("raw elevator height inches", Units.metersToInches(position));
+    SmartDashboard.putNumber("left elevator height inches", Units.metersToInches(encoderLeft.getPosition()));
+    SmartDashboard.putNumber("right elevator height inches", Units.metersToInches(encoderRight.getPosition()));
     return position;
 
 
@@ -201,7 +213,8 @@ public class Elevator extends SubsystemBase {
   public void setVoltage(double voltage){
     motorRight.setVoltage(voltage);
     motorLeft.setVoltage(voltage);
-    SmartDashboard.putNumber("Elevator voltage", voltage);
+    //SmartDashboard.putNumber("ele voltage", voltage);
+    
   }
 
   public void setRight(double voltage){
@@ -219,13 +232,18 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setHeight(double height){
-    double voltage = m_controller.calculate(getHeightMeters(), height);
-    voltage+= m_feedforward.calculateWithVelocities(getVelocityMetersPerSecond(),m_controller.getSetpoint().velocity);
+    //double voltage = m_controller.calculate(getHeightMeters(), height);
+    //SmartDashboard.putNumber("pid voltage", voltage);
+    //voltage+= m_feedforward.calculateWithVelocities(getVelocityMetersPerSecond(),m_controller.getSetpoint().velocity);
+    //SmartDashboard.putNumber("feedforward", m_feedforward.calculateWithVelocities(getVelocityMetersPerSecond(),m_controller.getSetpoint().velocity));
+    //SmartDashboard.putNumber("Elevator voltage", voltage);
+    double voltage = elevatorController.calculate(Units.metersToInches(getHeightMeters()),height)+0.3;
+    //totalVoltage+=voltage;
     setVoltage(voltage);
   }
 
 
-  public ProfiledPIDController getPidController(){
-    return m_controller;
+  public PIDController getPidController(){
+    return elevatorController;
   }
 }

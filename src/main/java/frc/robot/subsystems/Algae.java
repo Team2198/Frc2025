@@ -7,6 +7,8 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -29,13 +31,31 @@ public class Algae extends SubsystemBase {
   SparkMaxConfig configPivot = new SparkMaxConfig();
   SparkMaxConfig configRight = new SparkMaxConfig();
   SparkMaxConfig confightLeft = new SparkMaxConfig();
-  DigitalInput beamBreak = new DigitalInput(0);
+  //DigitalInput beamBreak = new DigitalInput(0);
 
 
   public Algae() {
 
     //config algae pivot 
+    configPivot
+    .inverted(false)
+    .idleMode(IdleMode.kCoast)
+    .smartCurrentLimit(30);
+    motorPivot.configure(configPivot, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+    
 
+    configRight
+    .inverted(false)
+    .idleMode(IdleMode.kCoast)
+    .smartCurrentLimit(30);
+    motorRight.configure(configPivot, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+
+    configRight
+    .inverted(false)
+    .idleMode(IdleMode.kCoast)
+    .smartCurrentLimit(30);
+    motorLeft.configure(configPivot, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+    
     /* configPivot
     .inverted(false)
     .idleMode(IdleMode.kCoast);
@@ -71,10 +91,44 @@ public class Algae extends SubsystemBase {
     motorRight.configure(configRight, null, null); */
   }
 
-  public void rotatePivot(double angle){
-    if (!beamBroken){
-      setVoltagePivot(pivotPid.calculate(angle));
+  public double getfeedforward(){
+    double angle = getPivotAngle();
+    if (angle<=90){
+      angle = 90-getPivotAngle();
+    } 
+
+    else{
+      angle = angle-90;
     }
+    double voltage = Math.cos(Math.toRadians(angle)*0.5);
+    
+    return voltage;
+    
+      
+    
+  }
+
+  public void rotateToAngle(double angle){
+    double voltage = pivotPid.calculate(getPivotAngle(), angle);
+    SmartDashboard.putNumber("arm feedforward", getfeedforward());
+    SmartDashboard.putNumber("voltage applied rotation", voltage);
+    
+
+    voltage+=getfeedforward();
+    motorPivot.setVoltage(voltage);
+    
+    
+  }
+
+  public void applyfeedForward(){
+    if (getPivotAngle()>=15){
+      motorPivot.set(getfeedforward());
+    }
+    else{
+      motorPivot.set(0);
+    }
+    
+
   }
 
   public void setVoltagePivot(double voltage){
@@ -90,8 +144,8 @@ public class Algae extends SubsystemBase {
     motorRight.setVoltage(voltage);
   }
 
-  public void checkBeamStatus(){
-    if (!beamBreak.get()){    
+  /* public void checkBeamStatus(){
+    if (true){    
       beamBroken = true;
       SmartDashboard.putBoolean("Algae Last Detected", beamBroken);
     }
@@ -102,13 +156,13 @@ public class Algae extends SubsystemBase {
       }
       
     }
-  }
+  } */
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
 
-    checkBeamStatus();
+    //checkBeamStatus();
   }
 
 

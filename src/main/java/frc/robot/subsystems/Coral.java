@@ -17,6 +17,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.commands.setPivotCoral;
 
 public class Coral extends SubsystemBase {
   /** Creates a new Coral. */
@@ -24,7 +25,9 @@ public class Coral extends SubsystemBase {
   private final SparkMax motorPivot = new SparkMax(3, MotorType.kBrushless);
   private final SparkMax coralDropper = new SparkMax(2, MotorType.kBrushless);
   private final RelativeEncoder pivotEncoder  = motorPivot.getEncoder();
-  PIDController pivotPid = new PIDController(0, 0, 0);
+  PIDController pivotPid = new PIDController(0.01, 0, 0);
+  PIDController pivotPidTwo = new PIDController(0.01,0,0);
+  PIDController pivotPidThree = new PIDController(0.05, 0,0);
   SparkMaxConfig configPivot = new SparkMaxConfig();
   SparkMaxConfig coralConfig= new SparkMaxConfig();
   
@@ -32,13 +35,16 @@ public class Coral extends SubsystemBase {
     configPivot.inverted(false);
     configPivot.smartCurrentLimit(30);
     configPivot.idleMode(IdleMode.kBrake);
+    pivotPid.setTolerance(5);
+    pivotPidTwo.setTolerance(5);
+    pivotPidThree.setTolerance(5);
     //configPivot.encoder.positionConversionFactor(1/15);
     //configPivot.encoder.velocityConversionFactor(1/15);
     
 
      
     motorPivot.configure(configPivot, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-
+    
     /* coralConfig
     .inverted(false)
     .idleMode(IdleMode.kCoast);
@@ -92,19 +98,95 @@ public class Coral extends SubsystemBase {
     //setVoltagePivot(pivotPid.calculate(angle));
   }
 
+
+  public double getfeedforward(){
+    double angle = getPivotAngle();
+    if (angle<=127){
+      angle = 127-getPivotAngle();
+      if (angle>=90){
+        angle = 90;
+      }
+    } 
+
+    else{
+      angle = angle-127;
+    }
+    double voltage = Math.cos(Math.toRadians(angle))*0.6;//0.7
+
+    /* if (getPivotAngle()>=110){
+      voltage = 0.7;  
+    } */
+    SmartDashboard.putNumber("applied feedforward", voltage);
+    return voltage;
+    
+      
+    
+  }
+
   public void rotateToAngle(double angle){
-    double voltage;
-    if (getPivotAngle()<=angle){
-      voltage = -1;
+    double voltage = -pivotPid.calculate(getPivotAngle(), angle);
+    
+    /* if (angle>=100){
+      voltage = -pivotPidTwo.calculate(getPivotAngle(),angle);
+    } */
+    SmartDashboard.putNumber("arm feedforward", getfeedforward());
+    SmartDashboard.putNumber("voltage applied rotation", voltage);
+    
+
+    voltage+=getfeedforward();
+    setVoltagePivot(voltage);
+    
+    
+  }
+
+  public void rotateToAngleTwo(double angle){
+    double voltage = -pivotPidThree.calculate(getPivotAngle(), angle);
+    
+    if (angle>=100){
+      voltage = -pivotPidThree.calculate(getPivotAngle(),angle);
+    }
+    SmartDashboard.putNumber("arm feedforward", getfeedforward());
+    SmartDashboard.putNumber("voltage applied rotation", voltage);
+    
+
+    voltage+=getfeedforward();
+    setVoltagePivot(voltage);
+    
+    
+  }
+
+  public void applyfeedForward(){
+    if (getPivotAngle()>=30){
+
+      if (getPivotAngle()>=50){
+        setVoltagePivot(getfeedforward());
+        SmartDashboard.putNumber("applied feedforward", getfeedforward());
+      }
+      else{
+        setVoltagePivot(0.1);
+      }
+      
+      
     }
     else{
-      voltage = 1;
+      //motorPivot.set(0);
+      setVoltagePivot(0);
+      SmartDashboard.putNumber("applied feedforward", 0);
     }
+    
 
-    setVoltagePivot(voltage);
+  }
+
+  public PIDController getPivotPid(){
+    return pivotPid;
+  }
+
+  public boolean atSetpoint(){
+    return pivotPid.atSetpoint();
   }
 
   public void setVoltagePivot(double voltage){
+    SmartDashboard.putNumber("voltage pivot", voltage);
     motorPivot.setVoltage(voltage);
   }
 
@@ -125,6 +207,15 @@ public class Coral extends SubsystemBase {
 
   public Command stopCom(){
     return this.runOnce(()->setVoltagePivot(0));
+  }
+
+  public PIDController getPivotPidTwo() {
+    // TODO Auto-generated method stub
+    return pivotPidTwo;
+  }
+
+  public PIDController getPivotpidThree(){
+    return pivotPidThree;
   }
 
 

@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Coral;
 
@@ -14,6 +15,7 @@ public class setPivotCoral extends Command {
   /** Creates a new setPivotCoral. */
   DoubleSupplier angle;
   Coral coral;
+  Double initialAngle;
   public setPivotCoral(Coral coralSub, DoubleSupplier angleSup) {
     coral = coralSub;
     angle = angleSup;
@@ -23,23 +25,59 @@ public class setPivotCoral extends Command {
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {}
+  public void initialize() {
+    initialAngle = coral.getPivotAngle();
+  }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    coral.rotateToAngle(67.5);
+    //coral.setVoltagePivot(0.3);
+    //coral.setVoltagePivot(coral.getfeedforward());
+    //coral.setVoltagePivot(coral.getfeedforward());
+    coral.rotateToAngle(angle.getAsDouble());
+    SmartDashboard.putBoolean("done", false); 
+    /* if (angle.getAsDouble()<initialAngle){
+      coral.rotateToAngleTwo(angle.getAsDouble());
+      SmartDashboard.putBoolean("done", false);  
+    }
+    else{
+      coral.rotateToAngle(angle.getAsDouble());
+      SmartDashboard.putBoolean("done", false);
+    } */
+    
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    coral.keepUp();
-  }
+    //coral.applyfeedForward();
+    coral.getPivotPid().reset();
+    coral.setVoltagePivot(coral.getfeedforward());
+    SmartDashboard.putBoolean("done", true);
+    //coral.setVoltagePivot(0);
+    
+  } 
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return Math.abs(coral.getPivotAngle()-angle.getAsDouble())<=3;
+    //return false;
+    /* if (angle.getAsDouble()<initialAngle){
+      
+      SmartDashboard.putBoolean("done", false); 
+      return coral.getPivotpidThree().atSetpoint(); 
+    }
+    else{
+      if (angle.getAsDouble()<110){
+        return coral.getPivotPid().atSetpoint();
+      }
+      
+      return coral.getPivotPidTwo().atSetpoint();
+      
+    } */
+    return coral.atSetpoint();
+    
+    
   } 
 }
