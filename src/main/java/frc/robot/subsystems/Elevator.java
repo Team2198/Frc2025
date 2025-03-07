@@ -7,14 +7,17 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutDistance;
 import edu.wpi.first.units.measure.MutLinearVelocity;
 import edu.wpi.first.units.measure.MutVoltage;
+import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -48,8 +51,8 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 public class Elevator extends SubsystemBase {
 
 
-  private final SparkMax motorRight    = new SparkMax(1, MotorType.kBrushless);
-  private final SparkMax motorLeft    = new SparkMax(2, MotorType.kBrushless);
+  private final SparkMax motorRight    = new SparkMax(7, MotorType.kBrushless);
+  private final SparkMax motorLeft    = new SparkMax(11, MotorType.kBrushless);
   private final RelativeEncoder encoderRight  = motorRight.getEncoder();
   private final RelativeEncoder encoderLeft  = motorLeft.getEncoder();
   
@@ -139,8 +142,8 @@ public class Elevator extends SubsystemBase {
     .idleMode(IdleMode.kBrake);
     configRight.encoder
     //1:20 ratio
-    .positionConversionFactor(0.05)
-    .velocityConversionFactor(0.05);
+    .positionConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI)
+    .velocityConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI);
     configRight.signals.primaryEncoderPositionPeriodMs(20);
     configRight.signals.primaryEncoderVelocityPeriodMs(20);
     configRight.smartCurrentLimit(40);
@@ -149,10 +152,10 @@ public class Elevator extends SubsystemBase {
     configLeft
     .inverted(false)
     .idleMode(IdleMode.kBrake);
-    configLeft.encoder
+   /*  configLeft.encoder
     //1:20 ratio
-    .positionConversionFactor(0.05)
-    .velocityConversionFactor(0.05);
+    .positionConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI)
+    .velocityConversionFactor(0.05*Units.inchesToMeters(1.757)*Math.PI); */
     configLeft.signals.primaryEncoderPositionPeriodMs(20);
     configLeft.signals.primaryEncoderVelocityPeriodMs(20);
     configLeft.smartCurrentLimit(40);
@@ -212,12 +215,17 @@ public class Elevator extends SubsystemBase {
     motorLeft.setVoltage(voltage);
     
     
-
+    
   }
 
   public void setHeight(double height){
     double voltage = m_controller.calculate(getHeightMeters(), height);
-    voltage+= m_feedforward.calculate(m_controller.getSetpoint().velocity);
+    voltage+= m_feedforward.calculateWithVelocities(getVelocityMetersPerSecond(),m_controller.getSetpoint().velocity);
     setVoltage(voltage);
+  }
+
+
+  public ProfiledPIDController getPidController(){
+    return m_controller;
   }
 }

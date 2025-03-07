@@ -5,10 +5,15 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.commands.AlgeaOver;
 import frc.robot.commands.Autos;
-import frc.robot.commands.DriveCommand;
+import frc.robot.commands.CoralOver;
+//import frc.robot.commands.DriveCommand;
 import frc.robot.commands.ElevatorOver;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.setPivotCoral;
+import frc.robot.subsystems.Algae;
+import frc.robot.subsystems.Coral;
 import frc.robot.subsystems.DriveSub;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.ExampleSubsystem;
@@ -38,7 +43,9 @@ public class RobotContainer {
 
 
     DriveSub drive = new DriveSub();
-    Elevator elevator = new Elevator();  
+    //Elevator elevator = new Elevator();  
+    //Algae algae = new Algae();
+    //Coral coral = new Coral();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -57,23 +64,29 @@ public class RobotContainer {
    */
   private void configureBindings() {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    new Trigger(m_exampleSubsystem::exampleCondition)
-        .onTrue(new ExampleCommand(m_exampleSubsystem));
+    //new Trigger(m_exampleSubsystem::exampleCondition)
+    //.onTrue(new ExampleCommand(m_exampleSubsystem));
 
     
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    drive.setDefaultCommand(new DriveCommand(drive,()->m_driverController.getLeftY(), ()->m_driverController.getLeftX(), ()->m_driverController.getRightX(), ()->m_driverController.getHID().getAButton(), ()->op_drivController.getHID().getBButton()));
+    //drive.setDefaultCommand(new DriveCommand(drive,()->m_driverController.getLeftY(), ()->m_driverController.getLeftX(), ()->m_driverController.getRightX(), ()->m_driverController.getHID().getAButton(), ()->op_drivController.getHID().getBButton()));
     //debugging commands
-    elevator.setDefaultCommand(new ElevatorOver(elevator, ()->op_drivController.getRightY(), ()->op_drivController.getLeftY()));
-    //test on the fly auto
-    m_driverController.a().onTrue(AutoBuilder.followPath(drive.generatePathToReef()));
+    //elevator.setDefaultCommand(new ElevatorOver(elevator, ()->op_drivController.getRightY(), ()->op_drivController.getLeftY()));
+    //algae.setDefaultCommand(new AlgeaOver(algae, ()->m_driverController.getRightY(), ()->m_driverController.getLeftY()));
+    //coral.setDefaultCommand(new CoralOver(coral, ()->m_driverController.getRightY(), ()->m_driverController.getLeftY()));
+    //m_driverController.a().onTrue(new setPivotCoral(coral, ()->67.5));
     
-  }
+    //elevator.setDefaultCommand(new ElevatorOver(elevator,()->op_drivController.getLeftY()));
+    //test on the fly auto
+    //m_driverController.a().onTrue(AutoBuilder.followPath(drive.generatePathToReef()));
+    //m_driverController.a().whileTrue(coral.keepUpCom());
+    //m_driverController.a().whileFalse(coral.stopCom());             
+  }                       
 
-  /**
+  /**      
    * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
+   *     s
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
