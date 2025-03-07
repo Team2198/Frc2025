@@ -7,6 +7,7 @@ package frc.robot;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.AlgeaOver;
 import frc.robot.commands.Autos;
+import frc.robot.commands.ClimberOver;
 import frc.robot.commands.CoralIntake;
 import frc.robot.commands.CoralOver;
 import frc.robot.commands.DriveCommand;
@@ -14,8 +15,10 @@ import frc.robot.commands.ElevatorCommand;
 //import frc.robot.commands.DriveCommand;
 import frc.robot.commands.ElevatorOver;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.ParralelAuto;
 import frc.robot.commands.setPivotCoral;
 import frc.robot.subsystems.Algae;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Coral;
 import frc.robot.subsystems.DriveSub;
 import frc.robot.subsystems.Elevator;
@@ -23,7 +26,9 @@ import frc.robot.subsystems.ExampleSubsystem;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -36,7 +41,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-
+  ParralelAuto autoSegment;
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
       new CommandXboxController(0);
@@ -45,14 +50,20 @@ public class RobotContainer {
       new CommandXboxController(1);
 
 
-    //DriveSub drive = new DriveSub();
+    DriveSub drive = new DriveSub();
     Elevator elevator = new Elevator();  
     //Algae algae = new Algae();
     Coral coral = new Coral();
-
+    Climber climber = new Climber();
+    Command driveBack;
+    SendableChooser<Command> m_chooser = new SendableChooser<>();
+    
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    autoSegment = new ParralelAuto(drive);
+    driveBack = Commands.sequence(drive.setWheelAngleCommand(0).withTimeout(1),drive.setRobotOffset(0),drive.zeroEncodersCommand(), autoSegment.driveBack(-1.4, 0));
     // Configure the trigger bindings
+    m_chooser.addOption("drive back",driveBack);
     configureBindings();
   }
 
@@ -73,9 +84,9 @@ public class RobotContainer {
     
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    //drive.setDefaultCommand(new DriveCommand(drive,()->m_driverController.getLeftY(), ()->m_driverController.getLeftX(), ()->m_driverController.getRightX(), ()->m_driverController.getHID().getAButton(), ()->op_drivController.getHID().getBButton()));
+    drive.setDefaultCommand(new DriveCommand(drive,()->m_driverController.getLeftY(), ()->m_driverController.getLeftX(), ()->m_driverController.getRightX(), ()->m_driverController.getHID().getAButton(), ()->op_drivController.getHID().getBButton()));
     //debugging commands
-    //elevator.setDefaultCommand(new ElevatorOver(elevator, ()->op_drivController.getRightY(), ()->op_drivController.getLeftY()));
+    //elevator.setDefaultComma  nd(new ElevatorOver(elevator, ()->op_drivController.getRightY(), ()->op_drivController.getLeftY()));
     //evator.setDefaultCommand(new ElevatorOver(elevator, ()->m_driverController.getRightY(), ()->m_driverController.getLeftY()));
     //m_driverController.a().whileTrue(elevator.runSysIdRoutine());
     //31+7/8= l2
@@ -88,8 +99,11 @@ public class RobotContainer {
     //op_drivController.a().onTrue(new ElevatorCommand(elevator, ()->10));
     //algae.setDefaultCommand(new AlgeaOver(algae, ()->m_driverController.getRightY(), ()->m_driverController.getLeftY()));
     //coral.setDefaultCommand(new CoralOver(coral, ()->m_driverController.getRightY(), ()->m_driverController.getLeftY()));
-    m_driverController.a().onTrue(new setPivotCoral(coral, ()->67.5));
-    m_driverController.x().onTrue(new setPivotCoral(coral, ()->130));
+    //op_drivController.a().onTrue(new setPivotCoral(coral, ()->67.5));
+    //op_drivController.x().onTrue(new setPivotCoral(coral, ()->130));
+    //coral.setDefaultCommand(new CoralOver(coral, ()->op_drivController.getLeftY(), ()->m_driverController.y().getAsBoolean())); 
+    
+    //climber.setDefaultCommand(new ClimberOver(climber, ()->m_driverController.getRightTriggerAxis()));
     //m_driverController.b().onTrue(new setPivotCoral(coral, ()->130));
     //m_driverController.x().onTrue(new setPivotCoral(coral, ()->30));
     //m_driverController.y().whileTrue(new CoralIntake(coral));
@@ -107,6 +121,6 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    return driveBack;
   }
 }

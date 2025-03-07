@@ -163,6 +163,8 @@ public class Algae extends SubsystemBase {
     // This method will be called once per scheduler run
 
     //checkBeamStatus();
+
+    SmartDashboard.putNumber("Algae angle", getPivotAngle());
   }
 
 

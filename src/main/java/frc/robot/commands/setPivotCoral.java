@@ -27,6 +27,7 @@ public class setPivotCoral extends Command {
   @Override
   public void initialize() {
     initialAngle = coral.getPivotAngle();
+    
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -35,16 +36,17 @@ public class setPivotCoral extends Command {
     //coral.setVoltagePivot(0.3);
     //coral.setVoltagePivot(coral.getfeedforward());
     //coral.setVoltagePivot(coral.getfeedforward());
-    coral.rotateToAngle(angle.getAsDouble());
-    SmartDashboard.putBoolean("done", false); 
-    /* if (angle.getAsDouble()<initialAngle){
-      coral.rotateToAngleTwo(angle.getAsDouble());
+    
+    SmartDashboard.putNumber("pivot target", angle.getAsDouble());
+    if (angle.getAsDouble()==130||angle.getAsDouble()==67.5){
+      coral.rotateToAngle(angle.getAsDouble());
       SmartDashboard.putBoolean("done", false);  
     }
     else{
-      coral.rotateToAngle(angle.getAsDouble());
+      coral.rotateToAngleTwo(angle.getAsDouble());
       SmartDashboard.putBoolean("done", false);
-    } */
+    } 
+    SmartDashboard.putNumber("initial angle", initialAngle);
     
   }
 
@@ -53,9 +55,11 @@ public class setPivotCoral extends Command {
   public void end(boolean interrupted) {
     //coral.applyfeedForward();
     coral.getPivotPid().reset();
+    
     coral.setVoltagePivot(coral.getfeedforward());
     SmartDashboard.putBoolean("done", true);
     //coral.setVoltagePivot(0);
+    
     
   } 
 
@@ -76,7 +80,19 @@ public class setPivotCoral extends Command {
       return coral.getPivotPidTwo().atSetpoint();
       
     } */
-    return coral.atSetpoint();
+    
+    if (angle.getAsDouble()==130||angle.getAsDouble()==67.5){
+      SmartDashboard.putBoolean("done", true);
+      return coral.atSetpoint();
+        
+    }
+    else{
+      SmartDashboard.putBoolean("done", true);
+      return false;
+      //return coral.rotateToAngleTwo(25);
+      
+    } 
+   
     
     
   } 

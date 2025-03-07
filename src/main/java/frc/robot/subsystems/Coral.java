@@ -10,8 +10,10 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -25,19 +27,38 @@ public class Coral extends SubsystemBase {
   private final SparkMax motorPivot = new SparkMax(3, MotorType.kBrushless);
   private final SparkMax coralDropper = new SparkMax(2, MotorType.kBrushless);
   private final RelativeEncoder pivotEncoder  = motorPivot.getEncoder();
-  PIDController pivotPid = new PIDController(0.01, 0, 0);
-  PIDController pivotPidTwo = new PIDController(0.01,0,0);
+  PIDController pivotPid = new PIDController(0.02, 0, 0);
+  PIDController pivotPidTwo = new PIDController(0.15  ,0,0);
   PIDController pivotPidThree = new PIDController(0.05, 0,0);
   SparkMaxConfig configPivot = new SparkMaxConfig();
   SparkMaxConfig coralConfig= new SparkMaxConfig();
-  
+  SparkClosedLoopController pidController;
+  double factor = 1.0/9.0;
   public Coral() {
     configPivot.inverted(false);
     configPivot.smartCurrentLimit(30);
     configPivot.idleMode(IdleMode.kBrake);
+    
+    
+    configPivot.encoder
+      .positionConversionFactor(factor)
+      .velocityConversionFactor(factor);
+    
+    configPivot.closedLoop
+      .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+      .pid(0,0,0);
+
+    
+
+    
     pivotPid.setTolerance(5);
     pivotPidTwo.setTolerance(5);
     pivotPidThree.setTolerance(5);
+    
+    pidController = motorPivot.getClosedLoopController();
+    
+
+
     //configPivot.encoder.positionConversionFactor(1/15);
     //configPivot.encoder.velocityConversionFactor(1/15);
     
@@ -98,9 +119,8 @@ public class Coral extends SubsystemBase {
     //setVoltagePivot(pivotPid.calculate(angle));
   }
 
-
-  public double getfeedforward(){
-    double angle = getPivotAngle();
+  public double getfeedforward(double angle){
+    /* double angle = getPivotAngle();
     if (angle<=127){
       angle = 127-getPivotAngle();
       if (angle>=90){
@@ -113,10 +133,38 @@ public class Coral extends SubsystemBase {
     }
     double voltage = Math.cos(Math.toRadians(angle))*0.6;//0.7
 
-    /* if (getPivotAngle()>=110){
+     if (getPivotAngle()>=110){
       voltage = 0.7;  
-    } */
-    SmartDashboard.putNumber("applied feedforward", voltage);
+    } */ 
+    double voltage = -pivotPidTwo.calculate(getPivotAngle(), angle);
+    SmartDashboard.putNumber("feedforward angle", angle);
+    SmartDashboard.putNumber("applied feedforward volts", voltage);
+    return voltage;
+    
+      
+    
+  }
+
+  public double getfeedforward(){
+     double angle = getPivotAngle();
+    if (angle<=127){
+      angle = 127-getPivotAngle();
+      if (angle>=90){
+        angle = 90;
+      }
+    } 
+
+    else{
+      angle = angle-127;
+    }
+    double voltage = Math.cos(Math.toRadians(angle))*0.6;//0.7
+
+     if (getPivotAngle()>=110){
+      voltage = 0.7;  
+    } 
+    
+    SmartDashboard.putNumber("feedforward angle", angle);
+    SmartDashboard.putNumber("applied feedforward volts", voltage);
     return voltage;
     
       
@@ -124,34 +172,60 @@ public class Coral extends SubsystemBase {
   }
 
   public void rotateToAngle(double angle){
-    double voltage = -pivotPid.calculate(getPivotAngle(), angle);
+    double voltage = 0; 
+
+    if (angle - getPivotAngle() > 0){
+      voltage = -pivotPid.calculate(getPivotAngle(), angle);
+
+      SmartDashboard.putBoolean("Up?", false);
+    }
+
+    else {
+      voltage = getfeedforward();
+      SmartDashboard.putBoolean("Up?", true);
+    }
+
+    
     
     /* if (angle>=100){
       voltage = -pivotPidTwo.calculate(getPivotAngle(),angle);
     } */
-    SmartDashboard.putNumber("arm feedforward", getfeedforward());
+    //SmartDashboard.putNumber("arm feedforward", getfeedforward());
     SmartDashboard.putNumber("voltage applied rotation", voltage);
     
 
-    voltage+=getfeedforward();
+    //voltage+=getfeedforward(angle);
+    //SmartDashboard.putNumber("voltage applied rotation 2", voltage);
+    //voltage = voltage+0.225*Math.signum(voltage);
+
     setVoltagePivot(voltage);
-    
+
     
   }
 
-  public void rotateToAngleTwo(double angle){
-    double voltage = -pivotPidThree.calculate(getPivotAngle(), angle);
+  public boolean rotateToAngleTwo(double angle){
+    double voltage = 0;
+    // voltage = -pivotPidThree.calculate(getPivotAngle(), angle);
     
-    if (angle>=100){
-      voltage = -pivotPidThree.calculate(getPivotAngle(),angle);
-    }
+    /* if (angle>=100){ */
+    //voltage = -pivotPidThree.calculate(getPivotAngle(),angle);
+    /* } */
     SmartDashboard.putNumber("arm feedforward", getfeedforward());
     SmartDashboard.putNumber("voltage applied rotation", voltage);
     
 
-    voltage+=getfeedforward();
-    setVoltagePivot(voltage);
+    voltage = 1.7;
+
+    if (getPivotAngle()>=30){
+      setVoltagePivot(voltage);
+      return false;
+    }
+    else{
+      setVoltagePivot(0);
+      return true;
+    }
     
+       
     
   }
 
@@ -182,6 +256,7 @@ public class Coral extends SubsystemBase {
   }
 
   public boolean atSetpoint(){
+    SmartDashboard.putBoolean("at setpoint", pivotPid.atSetpoint());
     return pivotPid.atSetpoint();
   }
 
@@ -214,9 +289,7 @@ public class Coral extends SubsystemBase {
     return pivotPidTwo;
   }
 
-  public PIDController getPivotpidThree(){
-    return pivotPidThree;
-  }
+  
 
 
 }

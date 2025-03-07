@@ -4,6 +4,7 @@
 
 package frc.robot.commands;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import frc.robot.subsystems.Coral;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -15,11 +16,12 @@ public class CoralOver extends Command {
   /** Creates a new CoralOver. */
   Coral coral;
   DoubleSupplier speedRight;
-  DoubleSupplier speedLeft;
+  
   double counter=0;
-  public CoralOver(Coral CoralSub,DoubleSupplier SpeedRight, DoubleSupplier SpeedLeft) {
+  BooleanSupplier killswitch;
+  public CoralOver(Coral CoralSub,DoubleSupplier SpeedRight, BooleanSupplier killSwitchSup) {
     speedRight = SpeedRight;
-    speedLeft = SpeedLeft;
+    killswitch = killSwitchSup;
     coral = CoralSub;
     addRequirements(coral);
     // Use addRequirements() here to declare subsystem dependencies.
@@ -35,8 +37,14 @@ public class CoralOver extends Command {
   @Override
   public void execute() {
     SmartDashboard.putNumber("counter", counter);
-    counter+=1;
-    SmartDashboard.putNumber("voltage", speedLeft.getAsDouble());
+    if (killswitch.getAsBoolean()){
+      coral.setVoltagePivot(speedRight.getAsDouble()*2);  
+    }
+    else{
+      coral.setVoltagePivot(coral.getfeedforward());
+    }
+    
+    SmartDashboard.putNumber("voltage", speedRight.getAsDouble());
     SmartDashboard.putNumber("voltage pivot", speedRight.getAsDouble()*6);
     //coral.setVoltagePivot(0.5);
     //coral.setVoltageDropper(speedLeft.getAsDouble()*6); // -0.28
