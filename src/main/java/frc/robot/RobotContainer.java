@@ -6,12 +6,15 @@ package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.AlgeaOver;
+import frc.robot.commands.AlignCoralTurn;
 import frc.robot.commands.Autos;
 import frc.robot.commands.CoralOver;
 //import frc.robot.commands.DriveCommand;
 import frc.robot.commands.ElevatorOver;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.commands.setPivotCoral;
+import frc.robot.commands.AlignCoral;
+import frc.robot.commands.AlignCoralTurn;
 import frc.robot.subsystems.Algae;
 import frc.robot.subsystems.Coral;
 import frc.robot.subsystems.DriveSub;
@@ -23,6 +26,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -81,7 +85,11 @@ public class RobotContainer {
     //test on the fly auto
     //m_driverController.a().onTrue(AutoBuilder.followPath(drive.generatePathToReef()));
     //m_driverController.a().whileTrue(coral.keepUpCom());
-    //m_driverController.a().whileFalse(coral.stopCom());             
+    //m_driverController.a().whileFalse(coral.stopCom());
+    
+    //m_driverController.a().whileTrue(new AlignCoralTurn(drive));
+    //m_driverController.a().whileFalse(drive.resetGoalCommand());
+    //m_driverController.y().whileTrue(new AlignCoral(drive));
   }                       
 
   /**      
