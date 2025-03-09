@@ -102,7 +102,7 @@ public class DriveSub extends SubsystemBase {
   private final SwerveModule backLeft = new SwerveModule(14, 17, 16, 0.261963, true, "back left", 0.015, 2.4978);
   SwerveDriveKinematics kinematics = new SwerveDriveKinematics(new Translation2d(dimensionTwo,dimension), new Translation2d(dimensionTwo,-dimension), new Translation2d(-dimensionTwo,dimension), new Translation2d(-dimensionTwo,-dimension));
   //private final SwerveModule backRight = new SwerveModule(14, 15, 22,0.133301, true, "back right", 0.015, 2.46);
-  private final SwerveModule backRight = new SwerveModule(20, 18, 19,0.128418, true, "back right", 0.015, 2.46);
+  private final SwerveModule backRight = new SwerveModule(20  , 18, 19,0.128418, true, "back right", 0.015, 2.46);
   private final SwerveModule[] modules = {frontLeft, frontRight, backLeft, backRight};
   
    // Mutable holder for unit-safe voltage values, persisted to avoid reallocation.
@@ -175,6 +175,16 @@ public class DriveSub extends SubsystemBase {
     SmartDashboard.putData("Field", field);
 
 
+  }
+
+
+  public double getLimelightAlgae(){
+    changeLimelightPipeLine(0);
+    
+    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+    NetworkTableEntry botPosition = table.getEntry("tx");
+    double tx = botPosition.getDouble(0);
+    return tx;
   }
 
   @Override

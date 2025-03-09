@@ -54,7 +54,9 @@ public class DriveCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-   
+    double limelightData = -drive.getLimelightAlgae();
+    
+    double robotTurnGoal =  drive.getHeading() + limelightData;
 
     double maxTurningRad = Constants.TeleOp.maxTurningRad;
     double xSpeedDub = xSpeed.getAsDouble();
@@ -121,7 +123,7 @@ public class DriveCommand extends Command {
     }
     
     else if (robotRelative.getAsBoolean()){
-        
+      drive.robotRelative(xSpeedDub, 0, drive.turnToAngle(robotTurnGoal));
       SmartDashboard.putString("drive type", "robot relative auto align");
     }
                  
@@ -130,7 +132,7 @@ public class DriveCommand extends Command {
     else{
       //drive.robotRelative(xSpeedDub, 0, drive.turnToAngle(robotTurnGoal));
       //drive.robotRelative(xSpeedDub, ySpeedDub, turningSpeedDub);
-      drive.robotRelative(xSpeedDub, ySpeedDub, turningSpeedDub);
+      drive.fieldRelative(xSpeedDub, ySpeedDub, turningSpeedDub);
       SmartDashboard.putString("drive type", "field relative");
     }
          

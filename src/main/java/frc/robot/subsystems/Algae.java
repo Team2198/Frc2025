@@ -18,6 +18,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.Command;
 
 public class Algae extends SubsystemBase {
   /** Creates a new Algae. */
@@ -27,10 +28,10 @@ public class Algae extends SubsystemBase {
   private final SparkMax motorPivot = new SparkMax(4, MotorType.kBrushless);
   private final RelativeEncoder pivotEncoder  = motorPivot.getEncoder();
   private boolean beamBroken = false;
-  PIDController pivotPid = new PIDController(0, 0, 0);
+  PIDController pivotPid = new PIDController(0.05, 0, 0);
   SparkMaxConfig configPivot = new SparkMaxConfig();
   SparkMaxConfig configRight = new SparkMaxConfig();
-  SparkMaxConfig confightLeft = new SparkMaxConfig();
+  SparkMaxConfig configtLeft = new SparkMaxConfig();
   //DigitalInput beamBreak = new DigitalInput(0);
 
 
@@ -38,7 +39,7 @@ public class Algae extends SubsystemBase {
 
     //config algae pivot 
     configPivot
-    .inverted(false)
+    .inverted(true)
     .idleMode(IdleMode.kCoast)
     .smartCurrentLimit(30);
     motorPivot.configure(configPivot, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
@@ -48,13 +49,13 @@ public class Algae extends SubsystemBase {
     .inverted(false)
     .idleMode(IdleMode.kCoast)
     .smartCurrentLimit(30);
-    motorRight.configure(configPivot, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+    motorRight.configure(configRight, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
-    configRight
-    .inverted(false)
+    configtLeft
+    .inverted(true)
     .idleMode(IdleMode.kCoast)
     .smartCurrentLimit(30);
-    motorLeft.configure(configPivot, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+    motorLeft.configure(configtLeft, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     
     /* configPivot
     .inverted(false)
@@ -102,22 +103,16 @@ public class Algae extends SubsystemBase {
     }
     double voltage = Math.cos(Math.toRadians(angle)*0.5);
     
-    return voltage;
-    
-      
-    
+    return voltage; 
   }
 
   public void rotateToAngle(double angle){
     double voltage = pivotPid.calculate(getPivotAngle(), angle);
     SmartDashboard.putNumber("arm feedforward", getfeedforward());
-    SmartDashboard.putNumber("voltage applied rotation", voltage);
-    
-
-    voltage+=getfeedforward();
-    motorPivot.setVoltage(voltage);
-    
-    
+    SmartDashboard.putNumber("voltage applied rotation", voltage + 0.185);
+  
+    //voltage+=getfeedforward();
+    motorPivot.setVoltage(voltage + 0.185);
   }
 
   public void applyfeedForward(){
@@ -133,10 +128,12 @@ public class Algae extends SubsystemBase {
 
   public void setVoltagePivot(double voltage){
     motorPivot.setVoltage(voltage);
+    SmartDashboard.putNumber("algae voltage pivot", voltage);
   }
 
   public double getPivotAngle(){
-    return pivotEncoder.getPosition()*360;
+    
+    return pivotEncoder.getPosition()*1.0/48.0*360;
   }
 
   public void setVoltageDropper(double voltage){
@@ -180,5 +177,17 @@ public class Algae extends SubsystemBase {
     
     
     
+  }
+
+
+
+  public void turnOffMotorLeftRight(){
+    setRight(0);
+    setLeft(0);
+    setVoltagePivot(0.02);
+  }
+
+  public Command turnOffMotors(){
+    return this.runOnce(()->turnOffMotorLeftRight());
   }
 }

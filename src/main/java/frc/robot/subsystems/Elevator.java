@@ -165,13 +165,18 @@ public class Elevator extends SubsystemBase {
     configLeft.smartCurrentLimit(40);
     motorLeft.configure(configLeft, null, null);
     elevatorController.setTolerance(1);
+
+    encoderRight.setPosition(0);
+    encoderLeft.setPosition(0);
+
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("velocity elevator", getVelocityMetersPerSecond());
-    SmartDashboard.putNumber("Elevator Height", getHeightMeters());
+    //SmartDashboard.putNumber("Elevator Height", getHeightMeters());
+    getHeightMeters();
     
   }
 

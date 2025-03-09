@@ -4,47 +4,41 @@
 
 package frc.robot.commands;
 
-import java.util.function.DoubleSupplier;
-
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.Algae;
-import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.DriveSub;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class AlgeaOver extends Command {
-  /** Creates a new AlgeaOver. */
-  Algae algea;
-  double speedRight;
-  double speedLeft;
-  public AlgeaOver(Algae algeaSub, DoubleSupplier SpeedRight, DoubleSupplier SpeedLeft) {
+public class AlgaeAlign extends Command {
+
+  private final DriveSub drive; 
+
+  /** Creates a new AlgaeAlign. */
+  public AlgaeAlign(DriveSub drive) {
     // Use addRequirements() here to declare subsystem dependencies.
-    speedRight = SpeedRight.getAsDouble();
-    speedLeft = SpeedLeft.getAsDouble();
-    algea = algeaSub;
-    addRequirements(algeaSub);
+    this.drive = drive; 
 
-  }
-
-
-  public AlgeaOver(Algae algeaSub, DoubleSupplier overallSpeed) {
-    // Use addRequirements() here to declare subsystem dependencies.
-    speedRight = overallSpeed.getAsDouble();
-    speedLeft = overallSpeed.getAsDouble();
-    algea = algeaSub;
-    addRequirements(algeaSub);
-
+    addRequirements(this.drive);
   }
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {}
+  public void initialize() {
+
+    
+    
+  }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    algea.setRight(speedRight);
-    algea.setVoltageDropper(speedLeft*12);
-    //algea.setLeft(speedLeft);
+
+    double shift = 0; 
+
+    if (this.drive.getLimelightTV()){
+      shift = -this.drive.getLimelightAlgae();
+    }
+
+    drive.turnToAngle(drive.getHeading() + shift);
   }
 
   // Called once the command ends or is interrupted.

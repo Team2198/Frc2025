@@ -5,7 +5,7 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.AlgeaOver;
+//import frc.robot.commands.AlgeaOver;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ClimberOver;
 import frc.robot.commands.CoralIntake;
@@ -23,6 +23,7 @@ import frc.robot.subsystems.Coral;
 import frc.robot.subsystems.DriveSub;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.commands.AlgaeOver;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 
@@ -51,14 +52,14 @@ public class RobotContainer {
 
 
     DriveSub drive = new DriveSub();
-    Elevator elevator = new Elevator();  
+    //Elevator elevator = new Elevator();  
     //Algae algae = new Algae();
     Coral coral = new Coral();
-    Climber climber = new Climber();
+    //Climber climber = new Climber();
     Command driveBack;
     SendableChooser<Command> m_chooser = new SendableChooser<>();
     
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  /** The container for the robot. Contains subsystems, OI de     vices, and commands. */
   public RobotContainer() {
     autoSegment = new ParralelAuto(drive);
     driveBack = Commands.sequence(drive.setWheelAngleCommand(0).withTimeout(1),drive.setRobotOffset(0),drive.zeroEncodersCommand(), autoSegment.driveBack(-1.4, 0));
@@ -76,7 +77,7 @@ public class RobotContainer {
    * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
    * joysticks}.
    */
-  private void configureBindings() {
+    private void configureBindings() {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
     //new Trigger(m_exampleSubsystem::exampleCondition)
     //.onTrue(new ExampleCommand(m_exampleSubsystem));
@@ -97,14 +98,33 @@ public class RobotContainer {
     m_driverController.y().onTrue(new ElevatorCommand(elevator, ()->10)); */
     //op_drivController.y().onTrue(new ElevatorCommand(elevator, ()->40));       
     //op_drivController.a().onTrue(new ElevatorCommand(elevator, ()->10));
-    //algae.setDefaultCommand(new AlgeaOver(algae, ()->m_driverController.getRightY(), ()->m_driverController.getLeftY()));
-    //coral.setDefaultCommand(new CoralOver(coral, ()->m_driverController.getRightY(), ()->m_driverController.getLeftY()));
-    //op_drivController.a().onTrue(new setPivotCoral(coral, ()->67.5));
-    //op_drivController.x().onTrue(new setPivotCoral(coral, ()->130));
-    //coral.setDefaultCommand(new CoralOver(coral, ()->op_drivController.getLeftY(), ()->m_driverController.y().getAsBoolean())); 
     
-    //climber.setDefaultCommand(new ClimberOver(climber, ()->m_driverController.getRightTriggerAxis()));
-    //m_driverController.b().onTrue(new setPivotCoral(coral, ()->130));
+    /* op_drivController.x().onTrue(new AlgaeOver(algae, 60, 1)); //intake
+    op_drivController.b().onTrue(new AlgaeOver(algae, 0, 3));//stop
+    op_drivController.y().onTrue(new AlgaeOver(algae, 60, 2));//push out
+    op_drivController.a().onTrue(new AlgaeOver(algae,100, 5));//angle up intake
+    op_drivController.rightBumper().onTrue(new AlgaeOver(algae,100, 4));//angle up intake
+    //op_drivController.leftBumper().onTrue(new AlgaeOver(algae,60, 5));//angle up intake
+    
+    algae.setDefaultCommand(algae.turnOffMotors()); */
+    //coral.setDefaultCommand(new CoralOver(coral, ()->m_driverController.getRightY(), ()->m_driverController.getLeftY()));
+    //op_drivController.a().onTrue(new setPiv'otCoral(coral, ()->67.5));
+    //op_drivController.x().onTrue(new setPivotCoral(coral, ()->130));
+
+    //coral.setDefaultCommand(new CoralOver(coral, ()->op_drivController.getLeftY(), ()->m_driverController.y().getAsBoolean())); 
+    op_drivController.a().onTrue(new setPivotCoral(coral, ()->130));
+    //climber.setDefaultCommand(new ClimberOver(climber, ()->op_drivController.getRightY()));
+ 
+    //algea testing
+    /* op_drivController.povRight().onTrue(new ElevatorCommand(elevator, ()->40));
+    op_drivController.povDown().onTrue(new ElevatorCommand(elevator, ()->0.5));
+    op_drivController.povUp().onTrue(new ElevatorCommand(elevator, ()->23));   
+    op_drivController.povLeft().onTrue(new ElevatorCommand(elevator, ()->3));  */
+    
+   // op_drivController.a().onTrue(new AlgeaOver(algae));
+          
+    
+    //m_driverController.b().onTru  e(new setPivotCoral(coral, ()->130));
     //m_driverController.x().onTrue(new setPivotCoral(coral, ()->30));
     //m_driverController.y().whileTrue(new CoralIntake(coral));
     //elevator.setDefaultCommand(new ElevatorOver(elevator,()->op_drivController.getLeftY()));

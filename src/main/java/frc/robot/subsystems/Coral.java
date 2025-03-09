@@ -15,7 +15,10 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -27,15 +30,17 @@ public class Coral extends SubsystemBase {
   private final SparkMax motorPivot = new SparkMax(3, MotorType.kBrushless);
   private final SparkMax coralDropper = new SparkMax(2, MotorType.kBrushless);
   private final RelativeEncoder pivotEncoder  = motorPivot.getEncoder();
-  PIDController pivotPid = new PIDController(0.02, 0, 0);
+  PIDController pivotPid = new PIDController(0.05, 0, 0);
   PIDController pivotPidTwo = new PIDController(0.15  ,0,0);
   PIDController pivotPidThree = new PIDController(0.05, 0,0);
   SparkMaxConfig configPivot = new SparkMaxConfig();
   SparkMaxConfig coralConfig= new SparkMaxConfig();
+  ArmFeedforward armfeed = new ArmFeedforward(0,0,0);
   SparkClosedLoopController pidController;
-  double factor = 1.0/9.0;
+  double factor = 1.0/45.0;
+  ProfiledPIDController profile;
   public Coral() {
-    configPivot.inverted(false);
+    configPivot.inverted(true);
     configPivot.smartCurrentLimit(30);
     configPivot.idleMode(IdleMode.kBrake);
     
@@ -51,13 +56,13 @@ public class Coral extends SubsystemBase {
     
 
     
-    pivotPid.setTolerance(5);
+    pivotPid.setTolerance(2);
     pivotPidTwo.setTolerance(5);
     pivotPidThree.setTolerance(5);
     
     pidController = motorPivot.getClosedLoopController();
     
-
+    motorPivot.configure(configPivot, null,null);
 
     //configPivot.encoder.positionConversionFactor(1/15);
     //configPivot.encoder.velocityConversionFactor(1/15);
@@ -77,7 +82,7 @@ public class Coral extends SubsystemBase {
     coralConfig.signals.primaryEncoderVelocityPeriodMs(100);
     coralConfig.smartCurrentLimit(30);
     coralDropper.configure(configPivot, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters); */
-
+    profile = new ProfiledPIDController(0, 0, 0, new Constraints(0.3, 0.3));
   }
 
   @Override
@@ -174,7 +179,7 @@ public class Coral extends SubsystemBase {
   public void rotateToAngle(double angle){
     double voltage = 0; 
 
-    if (angle - getPivotAngle() > 0){
+    /* if (angle - getPivotAngle() > 0){
       voltage = -pivotPid.calculate(getPivotAngle(), angle);
 
       SmartDashboard.putBoolean("Up?", false);
@@ -183,7 +188,15 @@ public class Coral extends SubsystemBase {
     else {
       voltage = getfeedforward();
       SmartDashboard.putBoolean("Up?", true);
-    }
+    } */
+
+    voltage = pivotPid.calculate(getPivotAngle(), angle)-0.5;
+    //MIN -0.3
+    //MAX -0.7
+    //AVG = -0.5
+    //voltage = -0.8;
+    //voltage = armfeed.calculate(90, 0);
+    //armfeed.calculateWithVelocities();
 
     
     
@@ -266,7 +279,7 @@ public class Coral extends SubsystemBase {
   }
 
   public double getPivotAngle(){
-    return pivotEncoder.getPosition()*360*1/9*-1+20;
+    return pivotEncoder.getPosition()*360+20;
   }
 
   
