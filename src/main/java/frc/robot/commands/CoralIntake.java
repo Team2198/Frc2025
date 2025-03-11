@@ -6,14 +6,17 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Coral;
+import frc.robot.subsystems.LEDLights;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class CoralIntake extends Command {
   /** Creates a new CoralPivot. */
   Coral coral;
-  public CoralIntake(Coral coralSub) {
+  private LEDLights led; 
+  public CoralIntake(Coral coralSub, LEDLights led) {
     coral = coralSub;
-    addRequirements(coral);
+    this.led = led; 
+    addRequirements(coral, led);
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
@@ -28,14 +31,15 @@ public class CoralIntake extends Command {
     if (coral.getPivotAngleDegrees() <= -67){
       coral.setVoltageDropper(0);  
     }
-    else if (coral.getPivotAngleDegrees()<=-23.5){
+    else if (!coral.getBeamBroken()){
       coral.setVoltageDropper(-0.25*12);
     }
 
     else{
       coral.setVoltageDropper(0.25*12);
     }
-
+    
+    led.updateHasCoral(coral.getBeamBroken());
     
    //coral.setVoltagePivot(0);
    //coral.applyfeedForward();

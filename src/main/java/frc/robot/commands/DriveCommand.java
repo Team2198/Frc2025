@@ -5,6 +5,7 @@
 package frc.robot.commands;
 import frc.robot.Constants;
 import frc.robot.subsystems.DriveSub;
+import frc.robot.subsystems.LEDLights;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -19,11 +20,13 @@ import edu.wpi.first.math.proto.Kinematics;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 public class DriveCommand extends Command {
   /** Creates a new DriveCommand. */
   
   DriveSub drive;
+  LEDLights led; 
   DoubleSupplier xSpeed;
   DoubleSupplier ySpeed;
   SlewRateLimiter xLimiter = new SlewRateLimiter(3);
@@ -33,8 +36,9 @@ public class DriveCommand extends Command {
   BooleanSupplier robotRelativeDrive;
   BooleanSupplier robotRelative;
   BooleanSupplier robotAlignApril; 
-  public DriveCommand(DriveSub driveS, DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier turningSpeed, BooleanSupplier robotRelative, BooleanSupplier robotRelativeDrive, BooleanSupplier robotAlignApril) {
+  public DriveCommand(DriveSub driveS, LEDLights led, DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier turningSpeed, BooleanSupplier robotRelative, BooleanSupplier robotRelativeDrive, BooleanSupplier robotAlignApril) {
     drive = driveS;
+    this.led = led;
     this.robotRelative = robotRelative;
     this.xSpeed=xSpeed;
     this.ySpeed=ySpeed;
@@ -43,7 +47,7 @@ public class DriveCommand extends Command {
     this.robotAlignApril = robotAlignApril; 
 
     
-    addRequirements(drive);
+    addRequirements(drive, led);
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
@@ -150,6 +154,7 @@ public class DriveCommand extends Command {
     }
     
 
+
     
     //drive.robotRelative(xSpeedDub, ySpeedDub, 0);
     SmartDashboard.putNumber("turningSpeed", turningSpeedDub);
@@ -159,7 +164,7 @@ public class DriveCommand extends Command {
     //drive.setSpeed(xSpeedDub/4.89, 0);
    // drive.setAngle(90);
 
-    
+    led.updateHasApril(drive.getLimelightTV());
     
   }
 

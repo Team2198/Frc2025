@@ -28,6 +28,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -57,8 +58,7 @@ public class Coral extends SubsystemBase {
   public final Trigger atMin = new Trigger(()->atMax());
   public final Trigger atMax = new Trigger(() -> atMin());
 
-
-
+  DigitalInput beamBreak = new DigitalInput(0);
 
   SysIdRoutine sysIdRoutine = new SysIdRoutine(
   new SysIdRoutine.Config(Volts.per(Second).of(0.1),
@@ -71,6 +71,10 @@ public class Coral extends SubsystemBase {
   )
   );
 
+
+  public boolean getBeamBroken(){
+    return !beamBreak.get();
+  }
 
   public Command runSysIdRoutine(){
     return (sysIdRoutine.dynamic(Direction.kForward).until(atMax))
@@ -365,7 +369,10 @@ public class Coral extends SubsystemBase {
     return pivotPidTwo;
   }
 
-  
+  public void spinMotors(){
+    spinMotors();
+
+  }
 
 
 }
