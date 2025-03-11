@@ -4,6 +4,7 @@
 
 package frc.robot.commands;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -15,10 +16,14 @@ public class setPivotCoral extends Command {
   /** Creates a new setPivotCoral. */
   DoubleSupplier angle;
   Coral coral;
-  Double initialAngle;
-  public setPivotCoral(Coral coralSub, DoubleSupplier angleSup) {
+  double initialAngle;
+  double intakeSpeed;
+  BooleanSupplier runIntake;
+  public setPivotCoral(Coral coralSub, DoubleSupplier angleSup, double power, BooleanSupplier runIntake) {
     coral = coralSub;
     angle = angleSup;
+    intakeSpeed = power;
+    this.runIntake = runIntake;
     addRequirements(coral);
     // Use addRequirements() here to declare subsystem dependencies.
   }
@@ -47,7 +52,9 @@ public class setPivotCoral extends Command {
       SmartDashboard.putBoolean("done", false);
     } 
     SmartDashboard.putNumber("initial angle", initialAngle); */
-    coral.rotateToAngle(angle.getAsDouble());
+   
+    
+    coral.setTarget(angle.getAsDouble());;
     
   }
 
@@ -56,6 +63,7 @@ public class setPivotCoral extends Command {
   public void end(boolean interrupted) {
     //coral.applyfeedForward();
     //coral.getPivotPid().reset();
+    coral.setTarget(angle.getAsDouble());
     
     //coral.setVoltagePivot(coral.getfeedforward());
     SmartDashboard.putBoolean("done", true);
@@ -94,7 +102,7 @@ public class setPivotCoral extends Command {
       
     }  */
 
-    return false;
+    return coral.atSetpoint();
    
     
     

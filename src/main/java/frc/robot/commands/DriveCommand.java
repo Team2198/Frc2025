@@ -32,13 +32,15 @@ public class DriveCommand extends Command {
   DoubleSupplier turningSpeed;
   BooleanSupplier robotRelativeDrive;
   BooleanSupplier robotRelative;
-  public DriveCommand(DriveSub driveS, DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier turningSpeed, BooleanSupplier robotRelative, BooleanSupplier robotRelativeDrive) {
+  BooleanSupplier robotAlignApril; 
+  public DriveCommand(DriveSub driveS, DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier turningSpeed, BooleanSupplier robotRelative, BooleanSupplier robotRelativeDrive, BooleanSupplier robotAlignApril) {
     drive = driveS;
     this.robotRelative = robotRelative;
     this.xSpeed=xSpeed;
     this.ySpeed=ySpeed;
     this.turningSpeed = turningSpeed;
     this.robotRelativeDrive = robotRelativeDrive;
+    this.robotAlignApril = robotAlignApril; 
 
     
     addRequirements(drive);
@@ -125,6 +127,13 @@ public class DriveCommand extends Command {
     else if (robotRelative.getAsBoolean()){
       drive.robotRelative(xSpeedDub, 0, drive.turnToAngle(robotTurnGoal));
       SmartDashboard.putString("drive type", "robot relative auto align");
+    
+    }
+
+    else if (robotAlignApril.getAsBoolean()){
+      drive.changeLimelightPipeLine(0);
+      drive.updateRobotGoal();
+      drive.followPathNew();
     }
                  
     
@@ -135,7 +144,10 @@ public class DriveCommand extends Command {
       drive.fieldRelative(xSpeedDub, ySpeedDub, turningSpeedDub);
       SmartDashboard.putString("drive type", "field relative");
     }
-         
+    
+    if (!robotAlignApril.getAsBoolean()){
+      drive.resetGoal();
+    }
     
 
     

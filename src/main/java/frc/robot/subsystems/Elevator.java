@@ -210,7 +210,7 @@ public class Elevator extends SubsystemBase {
   }
 
 
-  public Distance getLinearPosition()
+  public Distance   getLinearPosition()
   {
     return Meters.of(getHeightMeters());
   }

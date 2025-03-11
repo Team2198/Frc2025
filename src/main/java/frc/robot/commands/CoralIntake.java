@@ -24,7 +24,19 @@ public class CoralIntake extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    coral.setVoltageDropper(-0.25*12);
+    
+    if (coral.getPivotAngleDegrees() <= -67){
+      coral.setVoltageDropper(0);  
+    }
+    else if (coral.getPivotAngleDegrees()<=-23.5){
+      coral.setVoltageDropper(-0.25*12);
+    }
+
+    else{
+      coral.setVoltageDropper(0.25*12);
+    }
+
+    
    //coral.setVoltagePivot(0);
    //coral.applyfeedForward();
     //coral.rotateToAngle(90);

@@ -4,12 +4,18 @@
 
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
+
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.revrobotics.RelativeEncoder;
 
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -19,9 +25,16 @@ import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.units.AngleUnit;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.setPivotCoral;
 
 public class Coral extends SubsystemBase {
@@ -30,15 +43,44 @@ public class Coral extends SubsystemBase {
   private final SparkMax motorPivot = new SparkMax(3, MotorType.kBrushless);
   private final SparkMax coralDropper = new SparkMax(2, MotorType.kBrushless);
   private final RelativeEncoder pivotEncoder  = motorPivot.getEncoder();
-  PIDController pivotPid = new PIDController(0.05, 0, 0);
+  PIDController pivotPid = new PIDController(0.06, 0, 0);
   PIDController pivotPidTwo = new PIDController(0.15  ,0,0);
   PIDController pivotPidThree = new PIDController(0.05, 0,0);
   SparkMaxConfig configPivot = new SparkMaxConfig();
   SparkMaxConfig coralConfig= new SparkMaxConfig();
-  ArmFeedforward armfeed = new ArmFeedforward(0,0,0);
+  ArmFeedforward armfeed = new ArmFeedforward(0.2,-0.5,0,0);
   SparkClosedLoopController pidController;
   double factor = 1.0/45.0;
   ProfiledPIDController profile;
+  double angleTarget = -70.0;
+
+  public final Trigger atMin = new Trigger(()->atMax());
+  public final Trigger atMax = new Trigger(() -> atMin());
+
+
+
+
+  SysIdRoutine sysIdRoutine = new SysIdRoutine(
+  new SysIdRoutine.Config(Volts.per(Second).of(0.1),
+                         Volts.of(0.7),
+                      Seconds.of(10)),
+  new SysIdRoutine.Mechanism(
+    (voltage) -> this.setVoltagePivot(voltage.in(Volts)),
+    null, // No log consumer, since data is recorded by URCL
+    this
+  )
+  );
+
+
+  public Command runSysIdRoutine(){
+    return (sysIdRoutine.dynamic(Direction.kForward).until(atMax))
+        .andThen(sysIdRoutine.dynamic(Direction.kReverse).until(atMin))
+        .andThen(sysIdRoutine.quasistatic(Direction.kForward).until(atMax))
+        .andThen(sysIdRoutine .quasistatic(Direction.kReverse).until(atMin))
+        .andThen(Commands.print("DONE"));
+  }
+
+
   public Coral() {
     configPivot.inverted(true);
     configPivot.smartCurrentLimit(30);
@@ -51,8 +93,9 @@ public class Coral extends SubsystemBase {
     
     configPivot.closedLoop
       .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-      .pid(0,0,0);
+      .pid(0,0,0, ClosedLoopSlot.kSlot0);
 
+    
     
 
     
@@ -61,14 +104,11 @@ public class Coral extends SubsystemBase {
     pivotPidThree.setTolerance(5);
     
     pidController = motorPivot.getClosedLoopController();
+    pivotEncoder.setPosition(-70.0/360.0);
     
-    motorPivot.configure(configPivot, null,null);
 
     //configPivot.encoder.positionConversionFactor(1/15);
     //configPivot.encoder.velocityConversionFactor(1/15);
-    
-
-     
     motorPivot.configure(configPivot, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
     
     /* coralConfig
@@ -89,8 +129,9 @@ public class Coral extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     //rotatePivot(60);
-
-    SmartDashboard.putNumber("Pivot position", getPivotAngle());
+    rotateToAngle();
+    SmartDashboard.putNumber("Pivot position (rotations)", getPivotAngle());
+    SmartDashboard.putNumber("Pivot position (degrees)", getPivotAngleDegrees());
     
   }
 
@@ -98,6 +139,12 @@ public class Coral extends SubsystemBase {
     motorPivot.set(voltage);
   }
 
+  public boolean atMin(){
+    return getPivotAngle() <= 20;
+  }
+  public boolean atMax(){
+    return getPivotAngle() >=130;
+  }
   public double keepUp(){
     double angle = getPivotAngle();
     if (getPivotAngle()<=90){
@@ -176,7 +223,7 @@ public class Coral extends SubsystemBase {
     
   }
 
-  public void rotateToAngle(double angle){
+  public void rotateToAngle(){
     double voltage = 0; 
 
     /* if (angle - getPivotAngle() > 0){
@@ -190,12 +237,20 @@ public class Coral extends SubsystemBase {
       SmartDashboard.putBoolean("Up?", true);
     } */
 
-    voltage = pivotPid.calculate(getPivotAngle(), angle)-0.5;
+    
     //MIN -0.3
     //MAX -0.7
     //AVG = -0.5
     //voltage = -0.8;
-    //voltage = armfeed.calculate(90, 0);
+
+    //add negative velocity if you want to use ks for going down
+    //add positive velocity if you want to use ks for going up-
+    voltage = pivotPid.calculate(getPivotAngleDegrees(), angleTarget);
+    SmartDashboard.putNumber("pure pid", voltage);
+    voltage += armfeed.calculate(Math.toRadians(getPivotAngleDegrees()), voltage);
+    SmartDashboard.putNumber("arm feedforward", armfeed.calculate(Math.toRadians(getPivotAngleDegrees()), voltage));
+    SmartDashboard.putNumber("combined arm voltage", voltage);
+
     //armfeed.calculateWithVelocities();
 
     
@@ -203,17 +258,21 @@ public class Coral extends SubsystemBase {
     /* if (angle>=100){
       voltage = -pivotPidTwo.calculate(getPivotAngle(),angle);
     } */
-    //SmartDashboard.putNumber("arm feedforward", getfeedforward());
-    SmartDashboard.putNumber("voltage applied rotation", voltage);
+    
     
 
     //voltage+=getfeedforward(angle);
     //SmartDashboard.putNumber("voltage applied rotation 2", voltage);
     //voltage = voltage+0.225*Math.signum(voltage);
-
+ 
     setVoltagePivot(voltage);
 
     
+  }
+
+
+  public void setTarget(double angle){
+    angleTarget = angle;
   }
 
   public boolean rotateToAngleTwo(double angle){
@@ -279,7 +338,11 @@ public class Coral extends SubsystemBase {
   }
 
   public double getPivotAngle(){
-    return pivotEncoder.getPosition()*360+20;
+    return pivotEncoder.getPosition();
+  }
+
+  public double getPivotAngleDegrees(){
+    return pivotEncoder.getPosition()*360;
   }
 
   
