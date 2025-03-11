@@ -5,19 +5,38 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
+//import frc.robot.commands.AlgeaOver;
 import frc.robot.commands.Autos;
+import frc.robot.commands.ClimberOver;
+import frc.robot.commands.CoralIntake;
+import frc.robot.commands.CoralOver;
 import frc.robot.commands.DriveCommand;
+import frc.robot.commands.ElevatorCommand;
+//import frc.robot.commands.DriveCommand;
 import frc.robot.commands.ElevatorOver;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.ParralelAuto;
+import frc.robot.commands.setPivotCoral;
+import frc.robot.subsystems.Algae;
+import frc.robot.subsystems.Climber;
+import frc.robot.subsystems.Coral;
 import frc.robot.subsystems.DriveSub;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.commands.AlgaeOver;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
+import frc.robot.commands.AlignCoralTurn;
+import frc.robot.commands.AlignCoral;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -28,7 +47,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-
+  ParralelAuto autoSegment;
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
       new CommandXboxController(0);
@@ -39,10 +58,22 @@ public class RobotContainer {
 
     DriveSub drive = new DriveSub();
     Elevator elevator = new Elevator();  
-
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+    //Algae algae = new Algae();
+    Coral coral = new Coral();
+    //Climber climber = new Climber();
+    Command driveBack;
+    SendableChooser<Command> m_chooser = new SendableChooser<>();
+    private final SendableChooser<Command> autoChooser;
+    
+  /** The container for the robot. Contains subsystems, OI de     vices, and commands. */
   public RobotContainer() {
+    autoSegment = new ParralelAuto(drive);
+    driveBack = Commands.sequence(drive.setWheelAngleCommand(0).withTimeout(1),drive.setRobotOffset(0),drive.zeroEncodersCommand(), autoSegment.driveBack(-1.4, 0));
     // Configure the trigger bindings
+
+    m_chooser.addOption("drive back",driveBack);
+    autoChooser = AutoBuilder.buildAutoChooser();
+    SmartDashboard.putData("Auto Chooser", autoChooser);
     configureBindings();
   }
 
@@ -55,30 +86,79 @@ public class RobotContainer {
    * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
    * joysticks}.
    */
-  private void configureBindings() {
+    private void configureBindings() {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    new Trigger(m_exampleSubsystem::exampleCondition)
-        .onTrue(new ExampleCommand(m_exampleSubsystem));
+    //new Trigger(m_exampleSubsystem::exampleCondition)
+    //.onTrue(new ExampleCommand(m_exampleSubsystem));
 
     
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    drive.setDefaultCommand(new DriveCommand(drive,()->m_driverController.getLeftY(), ()->m_driverController.getLeftX(), ()->m_driverController.getRightX(), ()->m_driverController.getHID().getAButton(), ()->op_drivController.getHID().getBButton()));
+    //drive.setDefaultCommand(new DriveCommand(drive,()->m_driverController.getLeftY(), ()->m_driverController.getLeftX(), ()->m_driverController.getRightX(), ()->m_driverController.getHID().getAButton(), ()->op_drivController.getHID().getBButton(),()->m_driverController.getHID().getRightBumperButton()));
+    //m_driverController.leftBumper().onTrue(drive.resetOdoCommand());
     //debugging commands
-    elevator.setDefaultCommand(new ElevatorOver(elevator, ()->op_drivController.getRightY(), ()->op_drivController.getLeftY()));
+    //elevator.setDefaultComma  nd(new ElevatorOver(elevator, ()->op_drivController.getRightY(), ()->op_drivController.getLeftY()));
+    //evator.setDefaultCommand(new ElevatorOver(elevator, ()->m_driverController.getRightY(), ()->m_driverController.getLeftY()));
+    //m_driverController.a().whileTrue(elevator.runSysIdRoutine());
+    //31+7/8= l2
+    //
+    /* m_driverController.a().onTrue(new ElevatorCommand(elevator, ()->20));
+    m_driverController.b().onTrue(new ElevatorCommand(elevator, ()->30));
+    m_driverController.x().onTrue(new ElevatorCommand(elevator, ()->35));
+    m_driverController.y().onTrue(new ElevatorCommand(elevator, ()->10)); */
+    //op_drivController.y().onTrue(new ElevatorCommand(elevator, ()->40));       
+    //op_drivController.a().onTrue(new ElevatorCommand(elevator, ()->10));
+    
+    /* op_drivController.x().onTrue(new AlgaeOver(algae, 60, 1)); //intake
+    op_drivController.b().onTrue(new AlgaeOver(algae, 0, 3));//stop
+    op_drivController.y().onTrue(new AlgaeOver(algae, 60, 2));//push out
+    op_drivController.a().onTrue(new AlgaeOver(algae,100, 5));//angle up intake
+    op_drivController.rightBumper().onTrue(new AlgaeOver(algae,100, 4));//angle up intake
+    //op_drivController.leftBumper().onTrue(new AlgaeOver(algae,60, 5));//angle up intake
+    
+    algae.setDefaultCommand(algae.turnOffMotors()); */
+    //coral.setDefaultCommand(new CoralOver(coral, ()->m_driverController.getRightY(), ()->m_driverController.getLeftY()));
+    //op_drivController.a().onTrue(new setPiv'otCoral(coral, ()->67.5));
+    //op_drivController.x().onTrue(new setPivotCoral(coral, ()->130));
+
+    //coral.setDefaultCommand(new CoralOver(coral, ()->op_drivController.getLeftY(), ()->m_driverController.y().getAsBoolean())); 
+    //op_drivController.a().onTrue(new setPivotCoral(coral, ()->130));
+    //climber.setDefaultCommand(new ClimberOver(climber, ()->op_drivController.getRightY()));
+ 
+    //algea testing
+    //op_drivController.povRight().onTrue(new ElevatorCommand(elevator, ()->42));
+    //op_drivController.povDown().onTrue(new ElevatorCommand(elevator, ()->0.5));
+    //op_drivController.povUp().onTrue(new ElevatorCommand(elevator, ()->23));   
+    //op_drivController.povLeft().onTrue(new ElevatorCommand(elevator, ()->3)); 
+    //op_drivController.a().onTrue(new setPivotCoral(coral, ()->-23.5,-0.25*12, ()->false));
+    //op_drivController.b().onTrue(new setPivotCoral(coral, ()->40,0.25*12,()->false));
+    //op_drivController.y().onTrue(new setPivotCoral(coral, ()->-70,0,()->false));
+    //op_drivController.x().whileTrue(new CoralIntake(coral));
+    //op_drivController.rightBumper().onTrue  (new PathPlannerAuto("New Auto"));
+    // op_drivController.a().onTrue(new AlgeaOver(algae));
+                  
+                     
+    //m_driverController.b().onTru  e(new setPivotCoral(coral, ()->130));
+    //m_driverController.x().onTrue(new setPivotCoral(coral, ()->30));
+    //m_driverController.y().whileTrue(new CoralIntake(coral));
     //elevator.setDefaultCommand(new ElevatorOver(elevator,()->op_drivController.getLeftY()));
     //test on the fly auto
-    m_driverController.a().onTrue(AutoBuilder.followPath(drive.generatePathToReef()));
+    //m_driverController.a().onTrue(AutoBuilder.followPath(drive.generatePathToReef()));
+    //m_driverController.a().whileTrue(coral.keepUpCom());
+    //m_driverController.a().whileFalse(coral.stopCom());     
     
-  }
+    //m_driverController.x().whileTrue(new AlignCoral(drive, 1));
+    //m_driverController.x().whileFalse(drive.resetGoalCommand());
+    
+  }                       
 
-  /**
+  /**      
    * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
+   *     s
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    return driveBack;
   }
 }

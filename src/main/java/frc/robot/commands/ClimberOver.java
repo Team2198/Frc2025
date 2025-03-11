@@ -3,25 +3,22 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.commands;
+
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.DriveSub;
-
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import java.util.Arrays;
-
+import frc.robot.subsystems.Climber;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class AlignAprilTagTranslation extends Command {
-  /** Creates a new AlignAprilTagHorizontal. */
- private DriveSub drive; 
- private int pipeLine;
-
-  public AlignAprilTagTranslation(DriveSub drive, int pipeLine) {
-    this.drive = drive; 
-    this.pipeLine = pipeLine; 
-    addRequirements(drive);
+public class ClimberOver extends Command {
+  /** Creates a new ClimberOver. */
+  Climber climber;
+  DoubleSupplier speedTwo;
+  public ClimberOver(Climber climberOver, DoubleSupplier speed) {
+    climber = climberOver;
+    speedTwo = speed;
+    addRequirements(climber);
+    // Use addRequirements() here to declare subsystem dependencies.
   }
 
   // Called when the command is initially scheduled.
@@ -31,16 +28,8 @@ public class AlignAprilTagTranslation extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-
-    drive.changeLimelightPipeLine(pipeLine);
-
-    if (this.drive.getLimelightTV()){
-      double[] botPose = this.drive.getLimelightBotpose();
-      double x = botPose[0];
-      double z = botPose[2]; 
-      
-      drive.followPathNew(new Pose2d(x, z, new Rotation2d(0)));
-    }
+    climber.setClimber(speedTwo.getAsDouble()*12);
+    
   }
 
   // Called once the command ends or is interrupted.

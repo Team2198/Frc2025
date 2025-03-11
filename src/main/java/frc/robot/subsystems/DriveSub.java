@@ -53,6 +53,8 @@ import edu.wpi.first.units.MutableMeasure;
 
 import edu.wpi.first.units.VelocityUnit;
 import com.studica.frc.AHRS;
+import com.studica.frc.AHRS.NavXComType;
+
 import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.units.Measure;
@@ -89,18 +91,18 @@ import edu.wpi.first.networktables.StructArrayPublisher;
 
 public class DriveSub extends SubsystemBase {
   /** Creates a new DriveSub. */
-  private final SwerveModule frontLeft = new SwerveModule(18, 19, 25,0.376709, true,"front left", 0.015, 2.4585);
-  private final SwerveModule frontRight = new SwerveModule(16, 17, 23,0.323242, true,"front right",0.015, 2.4691);
-  AHRS gyro = new AHRS(null);
+  private final SwerveModule frontLeft = new SwerveModule(10, 13, 12,0.376709, true,"front left", 0.015, 2.4585);
+  private final SwerveModule frontRight = new SwerveModule(6, 9, 8,0.323242, true,"front right",0.015, 2.4691);
+  AHRS gyro = new AHRS(NavXComType.kMXP_SPI);
   PIDController positionPidController = new PIDController(4,0,0);
   int counter=0;
   double dimension = Units.inchesToMeters(27/2);
   double dimensionTwo = Units.inchesToMeters(32/2);
   //private final SwerveModule backLeft = new SwerveModule(20, 21, 26, 0.268311, true, "back left", 0.015, 2.4978);
-  private final SwerveModule backLeft = new SwerveModule(20, 21, 26, 0.261963, true, "back left", 0.015, 2.4978);
+  private final SwerveModule backLeft = new SwerveModule(14, 17, 16, 0.261963, true, "back left", 0.015, 2.4978);
   SwerveDriveKinematics kinematics = new SwerveDriveKinematics(new Translation2d(dimensionTwo,dimension), new Translation2d(dimensionTwo,-dimension), new Translation2d(-dimensionTwo,dimension), new Translation2d(-dimensionTwo,-dimension));
   //private final SwerveModule backRight = new SwerveModule(14, 15, 22,0.133301, true, "back right", 0.015, 2.46);
-  private final SwerveModule backRight = new SwerveModule(14, 15, 22,0.128418, true, "back right", 0.015, 2.46);
+  private final SwerveModule backRight = new SwerveModule(20  , 18, 19,0.128418, true, "back right", 0.015, 2.46);
   private final SwerveModule[] modules = {frontLeft, frontRight, backLeft, backRight};
   
    // Mutable holder for unit-safe voltage values, persisted to avoid reallocation.
@@ -110,7 +112,7 @@ public class DriveSub extends SubsystemBase {
   // Mutable holder for unit-safe linear velocity values, persisted to avoid reallocation.
   private final LinearVelocity  m_velocity = MetersPerSecond.of(0);
   private int limeLightPipeLine = 0;
-
+  private Pose2d robotGoal;
 
   boolean keepTurning = false;
   double robotOffset = 0;
@@ -118,15 +120,20 @@ public class DriveSub extends SubsystemBase {
   PIDController pidController = new PIDController(0.007,0,0);
   SwerveDrivePoseEstimator odometry;
 
-  PIDController yPidController = new PIDController(4/12*4.86, 0,0);
-  PIDController xPidController = new PIDController(4/12*4.86, 0,0);
+  PIDController yPidController = new PIDController(4.0/12.0*4.86, 0,0);
+  PIDController xPidController = new PIDController(4.0/12.0*4.86, 0,0);
   PIDController turningPidController = new PIDController(0.007, 0,0);
-
-  
+  StructPublisher<Pose2d> publisher = NetworkTableInstance.getDefault()
+  .getStructTopic("MyPose", Pose2d.struct).publish();
+StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
+  .getStructArrayTopic("MyPoseArray", Pose2d.struct).publish();
+  StructPublisher<Pose2d> publisher2 = NetworkTableInstance.getDefault()
+  .getStructTopic("MyPose2", Pose2d.struct).publish();
   
   private Field2d field = new Field2d();
   
   public DriveSub() {
+    odometry = new SwerveDrivePoseEstimator(kinematics, getRotation2d(), getModulePositions(), new Pose2d(0, 0, getRotation2d()));
     positionPidController.setTolerance(0.1);
     pidController.enableContinuousInput(-180, 180);
     pidController.setTolerance(4);
@@ -134,6 +141,7 @@ public class DriveSub extends SubsystemBase {
     turningPidController.enableContinuousInput(-180, 180);
     turningPidController.setTolerance(4);
     robotRelative(0, 0, 0);
+    robotGoal = getPose();
 
     try{
       RobotConfig config = RobotConfig.fromGUISettings();
@@ -174,15 +182,32 @@ public class DriveSub extends SubsystemBase {
 
   }
 
+
+  public double getLimelightAlgae(){
+    changeLimelightPipeLine(0);
+    
+    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+    NetworkTableEntry botPosition = table.getEntry("tx");
+    double tx = botPosition.getDouble(0);
+    return tx;
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("yaw",getHeading());
     SmartDashboard.putNumber("robot offset", robotOffset);
     //setAngle(90);
-    Logger.recordOutput("Drive/Pose", getPose());
+    //Logger.recordOutput("Drive/Pose", getPose());
 
-    odometry.update(getRotation2d(), getModulePositions());
+    odometry.update(getRawRotation2d(), getModulePositions());
+    
+    SmartDashboard.putNumber("robotGoal x", robotGoal.getX());
+    SmartDashboard.putNumber("robotGoal y", robotGoal.getY());
+
+    publisher.set(robotGoal);
+    publisher2.set(getPose());
+    arrayPublisher.set(new Pose2d[] {robotGoal, getPose()});
   }
 
 
@@ -228,9 +253,6 @@ public class DriveSub extends SubsystemBase {
     SmartDashboard.putNumber("raw heading", angle);
     return angle;
   }
-
-
-
 
  
 
@@ -300,7 +322,9 @@ public class DriveSub extends SubsystemBase {
 
    
 
-  
+  public Command resetOdoCommand(){
+    return this.runOnce(()->resetOdometry(new Pose2d()));
+  }
 
 
   public double getRotHeading(){
@@ -328,7 +352,7 @@ public class DriveSub extends SubsystemBase {
       modules[i].setState(moduleStates[i]);
     }
 
-     //backRight.setState(moduleStates[3]);
+     //backLeft.setState(moduleStates[3]);
   }
 
   public void robotRelative(double xSpeed, double ySpeed, double turningSpeed){
@@ -422,14 +446,14 @@ public class DriveSub extends SubsystemBase {
     }
   }
 
-  public boolean getLimelightTV(){
+  public boolean getLimelightTV(){    
     return NetworkTableInstance.getDefault().getTable("limelight").getEntry("tv").getInteger(0) == 1; 
   }
 
   public double[] getLimelightBotpose(){
 
     NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-    NetworkTableEntry botPosition = table.getEntry("botpose_targetspace");
+    NetworkTableEntry botPosition = table.getEntry("camerapose_targetspace");
     double[] botPose = botPosition.getDoubleArray(new double[6]);
     return botPose;
   }
@@ -518,18 +542,58 @@ public class DriveSub extends SubsystemBase {
   //use limelight data to generate a target pose relative to current robot pose
   //dont forget to take into account that limelight will return camera to target pose
   //we need robot to target pose
-  public boolean followPathNew(Pose2d target){
+  public void followPathNew(){
 
-    
+    Pose2d target = robotGoal;
+
+    SmartDashboard.putNumber("target x", target.getX()); 
+    SmartDashboard.putNumber("target y", target.getY());
+
     double xSpeed = xPidController.calculate(getPose().getX(), target.getX());
     double ySpeed = yPidController.calculate(getPose().getY(), target.getY());
+
+    SmartDashboard.putNumber("targetP x", getPose().getX()); 
+    SmartDashboard.putNumber("targetP y", getPose().getY());
     double turningSpeed = turningPidController.calculate(getPose().getRotation().getDegrees(), target.getRotation().getDegrees());
+    SmartDashboard.putNumber("X speed follow path", xSpeed);
+    SmartDashboard.putNumber("y speed follow path", ySpeed);
+    SmartDashboard.putNumber("turning speed follow path", turningSpeed);
+
 
     robotRelative(xSpeed,ySpeed,turningSpeed);
-
-    return xPidController.atSetpoint() && yPidController.atSetpoint()&&turningPidController.atSetpoint();
+    
+    
 
   }
+
+  public void updateRobotGoal(){
+    if (getLimelightTV()){
+      double[] botPose = getLimelightBotpose(); 
+
+      double x = -botPose[0];
+      double z = -botPose[2]; 
+      double yaw = -botPose[4];
+
+    
+
+      SmartDashboard.putNumber("limelight x", z);
+      SmartDashboard.putNumber("limelight y", x);
+      SmartDashboard.putNumber("limelight yaw", yaw);
+      Pose2d currentPose2d = getPose().plus(new Transform2d(z, x, Rotation2d.fromDegrees(yaw)));
+      robotGoal = currentPose2d;
+    }
+  }
+  
+  public void resetGoal(){
+    robotGoal = getPose();
+  }
+
+  public Command resetGoalCommand(){
+    return this.runOnce(()->resetGoal());
+  }
+  
+
+  
 
   
 }
