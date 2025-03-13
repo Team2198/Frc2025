@@ -32,8 +32,9 @@ public class DriveCommand extends Command {
   DoubleSupplier turningSpeed;
   BooleanSupplier robotRelativeDrive;
   BooleanSupplier robotRelative;
-  BooleanSupplier robotAlignApril; 
-  public DriveCommand(DriveSub driveS, DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier turningSpeed, BooleanSupplier robotRelative, BooleanSupplier robotRelativeDrive, BooleanSupplier robotAlignApril) {
+  BooleanSupplier robotAlignApril;
+  BooleanSupplier robotAlignAprilAngle;  
+  public DriveCommand(DriveSub driveS, DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier turningSpeed, BooleanSupplier robotRelative, BooleanSupplier robotRelativeDrive, BooleanSupplier robotAlignApril, BooleanSupplier robotAlignAprilAngle) {
     drive = driveS;
     this.robotRelative = robotRelative;
     this.xSpeed=xSpeed;
@@ -41,7 +42,7 @@ public class DriveCommand extends Command {
     this.turningSpeed = turningSpeed;
     this.robotRelativeDrive = robotRelativeDrive;
     this.robotAlignApril = robotAlignApril; 
-
+    this.robotAlignAprilAngle = robotAlignAprilAngle; 
     
     addRequirements(drive);
     // Use addRequirements() here to declare subsystem dependencies.
@@ -131,11 +132,16 @@ public class DriveCommand extends Command {
     }
 
     else if (robotAlignApril.getAsBoolean()){
-      drive.changeLimelightPipeLine(0);
+      drive.changeLimelightPipeLine(3);
       drive.updateRobotGoal();
       drive.followPathNew();
     }
-                 
+    
+    else if (robotAlignAprilAngle.getAsBoolean()){
+      drive.changeLimelightPipeLine(3);
+      drive.updateRobotGoalAngle();
+      drive.followPathNew();
+    }
     
 
     else{
@@ -145,10 +151,9 @@ public class DriveCommand extends Command {
       SmartDashboard.putString("drive type", "field relative");
     }
     
-    if (!robotAlignApril.getAsBoolean()){
+    if (!robotAlignApril.getAsBoolean() && !robotAlignAprilAngle.getAsBoolean()){
       drive.resetGoal();
     }
-    
 
     
     //drive.robotRelative(xSpeedDub, ySpeedDub, 0);

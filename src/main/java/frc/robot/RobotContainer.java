@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -60,7 +61,7 @@ public class RobotContainer {
     Elevator elevator = new Elevator();  
     //Algae algae = new Algae();
     Coral coral = new Coral();
-    //Climber climber = new Climber();
+    Climber climber = new Climber();
     Command driveBack;
     SendableChooser<Command> m_chooser = new SendableChooser<>();
     private final SendableChooser<Command> autoChooser;
@@ -94,7 +95,7 @@ public class RobotContainer {
     
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    //drive.setDefaultCommand(new DriveCommand(drive,()->m_driverController.getLeftY(), ()->m_driverController.getLeftX(), ()->m_driverController.getRightX(), ()->m_driverController.getHID().getAButton(), ()->op_drivController.getHID().getBButton(),()->m_driverController.getHID().getRightBumperButton()));
+    //drive.setDefaultCommand(new DriveCommand(drive,()->m_driverController.getLeftY(), ()->m_driverController.getLeftX(), ()->m_driverController.getRightX(), ()->m_driverController.getHID().getAButton(), ()->op_drivController.getHID().getBButton(),()->m_driverController.getHID().getRightBumperButton(),()->m_driverController.getHID().getLeftBumperButton() ));
     //m_driverController.leftBumper().onTrue(drive.resetOdoCommand());
     //debugging commands
     //elevator.setDefaultComma  nd(new ElevatorOver(elevator, ()->op_drivController.getRightY(), ()->op_drivController.getLeftY()));
@@ -123,25 +124,31 @@ public class RobotContainer {
 
     //coral.setDefaultCommand(new CoralOver(coral, ()->op_drivController.getLeftY(), ()->m_driverController.y().getAsBoolean())); 
     //op_drivController.a().onTrue(new setPivotCoral(coral, ()->130));
-    //climber.setDefaultCommand(new ClimberOver(climber, ()->op_drivController.getRightY()));
+    climber.setDefaultCommand(new ClimberOver(climber, ()->op_drivController.getRightY()));
  
     //algea testing
-    //op_drivController.povRight().onTrue(new ElevatorCommand(elevator, ()->42));
-    //op_drivController.povDown().onTrue(new ElevatorCommand(elevator, ()->0.5));
-    //op_drivController.povUp().onTrue(new ElevatorCommand(elevator, ()->23));   
+    //op_drivController.povRight().onTrue(new ElevatorCommand(elevator, ()->9));//6.3
+    //op_drivController.povDown().onTrue(new ElevatorCommand(elevator, ()->1.2));
+    //op_drivController.povUp().onTrue(new ElevatorCommand(elevator, ()->23.75));//22
+    //op_drivController.povLeft().onTrue(new ElevatorCommand(elevator, ()->47.5));//47.5
+      
+     
     //op_drivController.povLeft().onTrue(new ElevatorCommand(elevator, ()->3)); 
     //op_drivController.a().onTrue(new setPivotCoral(coral, ()->-23.5,-0.25*12, ()->false));
-    //op_drivController.b().onTrue(new setPivotCoral(coral, ()->40,0.25*12,()->false));
+    //op_drivController.b().onTrue(new setPivotCoral(coral, ()->38,0.25*12,()->false));//18
     //op_drivController.y().onTrue(new setPivotCoral(coral, ()->-70,0,()->false));
-    //op_drivController.x().whileTrue(new CoralIntake(coral));
-    //op_drivController.rightBumper().onTrue  (new PathPlannerAuto("New Auto"));
+    //op_drivController.x().onTrue(new CoralIntake(coral).raceWith(coral.intakeWaitCommand()));
+    //op_drivController.rightBumper().onTrue(new PathPlannerAuto("New Auto"));
     // op_drivController.a().onTrue(new AlgeaOver(algae));
+
+    //l2 9
+    //l3 23.75
                   
                      
-    //m_driverController.b().onTru  e(new setPivotCoral(coral, ()->130));
+    //m_driverController.b().onTru e(new setPivotCoral(coral, ()->130));
     //m_driverController.x().onTrue(new setPivotCoral(coral, ()->30));
     //m_driverController.y().whileTrue(new CoralIntake(coral));
-    //elevator.setDefaultCommand(new ElevatorOver(elevator,()->op_drivController.getLeftY()));
+   // elevator.setDefaultCommand(new ElevatorOver(elevator,()->op_drivController.getLeftY()));
     //test on the fly auto
     //m_driverController.a().onTrue(AutoBuilder.followPath(drive.generatePathToReef()));
     //m_driverController.a().whileTrue(coral.keepUpCom());

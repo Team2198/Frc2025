@@ -11,6 +11,7 @@ import frc.robot.subsystems.Coral;
 public class CoralIntake extends Command {
   /** Creates a new CoralPivot. */
   Coral coral;
+  boolean intake = true;
   public CoralIntake(Coral coralSub) {
     coral = coralSub;
     addRequirements(coral);
@@ -28,12 +29,14 @@ public class CoralIntake extends Command {
     if (coral.getPivotAngleDegrees() <= -67){
       coral.setVoltageDropper(0);  
     }
-    else if (coral.getPivotAngleDegrees()<=-23.5){
+    else if (coral.getPivotAngleDegrees()<=-21.5){
+      intake = true;
       coral.setVoltageDropper(-0.25*12);
     }
 
     else{
-      coral.setVoltageDropper(0.25*12);
+      intake = false;
+      coral.setVoltageDropper(0.35*12);
     }
 
     
@@ -46,13 +49,25 @@ public class CoralIntake extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    coral.setVoltageDropper(0);
+    coral.setVoltageDropper(-0.2);
     //coral.applyfeedForward();
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    if (intake){
+      if (coral.getPivotAngleDegrees() <= -67){
+        return true;
+      }
+      else{
+        return coral.getBeamBroken();
+      }
+      
+    }
+    else{
+      return false;
+    }
+    
   }
 }

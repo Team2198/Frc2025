@@ -141,7 +141,7 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
     turningPidController.enableContinuousInput(-180, 180);
     turningPidController.setTolerance(4);
     robotRelative(0, 0, 0);
-    robotGoal = getPose();
+    robotGoal = new Pose2d(0, 0, Rotation2d.fromDegrees(0));  //getPose();
 
     try{
       RobotConfig config = RobotConfig.fromGUISettings();
@@ -151,7 +151,7 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
         this::getPose, 
         this::resetOdometry, 
         this::getSpeeds, 
-        this::driveRobotRelative, 
+        this::driveRobotRelativeAuto, 
         new PPHolonomicDriveController(
           new PIDConstants(5.0, 0.0, 0.0),
           new PIDConstants(5.0, 0.0, 0.0)
@@ -289,6 +289,13 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
     setModuleStates(targetSpeeds);
   }
 
+  public void driveRobotRelativeAuto(ChassisSpeeds robotRelativeSpeeds) {
+    ChassisSpeeds targetSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, 0.02);
+
+    
+    setModuleStatesAuto(targetSpeeds);
+  }
+
   
 
 
@@ -355,6 +362,20 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
      //backLeft.setState(moduleStates[3]);
   }
 
+  public void setModuleStatesAuto(ChassisSpeeds speed){
+    SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(speed);
+    //desaturate wheelspeeds
+    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, Constants.TeleOp.maxSpeed);
+    SmartDashboard.putNumber("module angles2", Math.toDegrees(moduleStates[0].angle.getRadians()));
+    SmartDashboard.putNumber("module velocity", (moduleStates[0].speedMetersPerSecond));
+   
+    for (int i=0; i<modules.length;i++){
+      modules[i].setStateAuto(moduleStates[i]);
+    }
+
+     //backLeft.setState(moduleStates[3]);
+  }
+
   public void robotRelative(double xSpeed, double ySpeed, double turningSpeed){
     ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
     SmartDashboard.putNumber("xSpeed", speeds.vxMetersPerSecond);
@@ -362,7 +383,7 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
     SmartDashboard.putNumber("turning rad", speeds.omegaRadiansPerSecond);
     setModuleStates(speeds);
     
-  }
+  } 
 
   public void fieldRelative(double xSpeed, double ySpeed, double turningSpeed){
     
@@ -554,13 +575,14 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
 
     SmartDashboard.putNumber("targetP x", getPose().getX()); 
     SmartDashboard.putNumber("targetP y", getPose().getY());
+
     double turningSpeed = turningPidController.calculate(getPose().getRotation().getDegrees(), target.getRotation().getDegrees());
     SmartDashboard.putNumber("X speed follow path", xSpeed);
     SmartDashboard.putNumber("y speed follow path", ySpeed);
     SmartDashboard.putNumber("turning speed follow path", turningSpeed);
+    ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
 
-
-    robotRelative(xSpeed,ySpeed,turningSpeed);
+    driveRobotRelative(speeds);
     
     
 
@@ -572,20 +594,30 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
 
       double x = -botPose[0];
       double z = -botPose[2]; 
-      double yaw = -botPose[4];
-
-    
 
       SmartDashboard.putNumber("limelight x", z);
       SmartDashboard.putNumber("limelight y", x);
-      SmartDashboard.putNumber("limelight yaw", yaw);
-      Pose2d currentPose2d = getPose().plus(new Transform2d(z, x, Rotation2d.fromDegrees(yaw)));
+      Pose2d currentPose2d = getPose().plus(new Transform2d(z, x, Rotation2d.fromDegrees(0)));
       robotGoal = currentPose2d;
     }
+  }
+
+  public void updateRobotGoalAngle(){
+
+    if (getLimelightTV()){
+      double[] botPose = getLimelightBotpose(); 
+      double yaw = -botPose[4]; 
+      Pose2d currentPose2d = getPose().plus(new Transform2d(0, 0, Rotation2d.fromDegrees(yaw)));
+      robotGoal = currentPose2d;
+
+      SmartDashboard.putNumber("degree goal", getHeading() + yaw);  
+    }
+
   }
   
   public void resetGoal(){
     robotGoal = getPose();
+    //robotGoal = new Pose2d(1.0, 1.0, Rotation2d.fromDegrees(0));
   }
 
   public Command resetGoalCommand(){

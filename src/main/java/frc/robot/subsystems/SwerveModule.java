@@ -57,7 +57,9 @@ public class SwerveModule extends SubsystemBase {
     config.Feedback.SensorToMechanismRatio = 6.75/(Math.PI*Units.inchesToMeters(4));
     config.Slot0.kV=kv;
     config.Slot0.kP=
-    config.Slot1.kP = 2.0764;
+    config.Slot1.kV = kv;
+    config.Slot1.kA = 0.065996;
+    config.Slot1.kP = 2.3736;
     
     if (inverted){
       config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -106,7 +108,7 @@ public class SwerveModule extends SubsystemBase {
   public void periodic() {
     
     // This method will be called once per scheduler run
-    
+    SmartDashboard.putNumber("velocty setter slot", velocitySetter.Slot);
     //setAngle(0);
     SmartDashboard.putNumber("position"+name, getTurningPosition());
     SmartDashboard.putNumber("drive pos"+name, driveMotor.getPosition().getValueAsDouble());
@@ -179,7 +181,7 @@ public class SwerveModule extends SubsystemBase {
   }
 
   public void setState(SwerveModuleState state){
-
+      velocitySetter.Slot = 0;
       if (Math.abs(state.speedMetersPerSecond)<0.001){
         SmartDashboard.putNumber("velcity"+name, 0);
         SmartDashboard.putNumber("goal", 0);
@@ -213,8 +215,35 @@ public class SwerveModule extends SubsystemBase {
       return driveMotor.getVelocity().getValueAsDouble();
     }
 
+    public void setStateAuto(SwerveModuleState state){
+      velocitySetter.Slot = 1;
+      if (Math.abs(state.speedMetersPerSecond)<0.001){
+        SmartDashboard.putNumber("velcity"+name, 0);
+        SmartDashboard.putNumber("goal", 0);
+        SmartDashboard.putNumber("angle"+name, 0);
 
+        turningMotor.set(0);
+        driveMotor.set(0);
+        return;
+      }
+      else{
+        SmartDashboard.putNumber("angle unoptimized"+name, Math.toDegrees(state.angle.getRadians()));
+        double currAngle = getTurningPosition();
+        state = SwerveModuleState.optimize(state, new Rotation2d(Math.toRadians(currAngle)));
+        SmartDashboard.putNumber("velcity"+name, state.speedMetersPerSecond);
+        SmartDashboard.putNumber("angle optimized"+name, Math.toDegrees(state.angle.getRadians()));
+        SmartDashboard.putNumber("curr angle"+name, currAngle);
+        SmartDashboard.putNumber("curr velocity"+name, getVelocity());
+        setAngle(Math.toDegrees(state.angle.getRadians()));
+        
+        driveMotor.setControl(velocitySetter.withVelocity(state.speedMetersPerSecond).withSlot(0));
+        //driveMotor.set(state.speedMetersPerSecond/4.89);
+        SmartDashboard.putNumber("velocity voltage app"+name, driveMotor.getMotorVoltage().getValueAsDouble());
 
+      }
+    }
+
+    
 
   public void setAngle(double angle){
     

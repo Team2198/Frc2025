@@ -28,10 +28,12 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -53,7 +55,7 @@ public class Coral extends SubsystemBase {
   double factor = 1.0/45.0;
   ProfiledPIDController profile;
   double angleTarget = -70.0;
-
+  DigitalInput beamBreak = new DigitalInput(7);
   public final Trigger atMin = new Trigger(()->atMax());
   public final Trigger atMax = new Trigger(() -> atMin());
 
@@ -130,9 +132,15 @@ public class Coral extends SubsystemBase {
     // This method will be called once per scheduler run
     //rotatePivot(60);
     rotateToAngle();
+    SmartDashboard.putBoolean("detects object", getBeamBroken());
     SmartDashboard.putNumber("Pivot position (rotations)", getPivotAngle());
     SmartDashboard.putNumber("Pivot position (degrees)", getPivotAngleDegrees());
+    SmartDashboard.putBoolean("beamBreak", beamBreak.get());
     
+  }
+
+  public boolean getBeamBroken(){
+    return !beamBreak.get();
   }
 
   public void setRight(double voltage){
@@ -223,6 +231,15 @@ public class Coral extends SubsystemBase {
     
   }
 
+  public Command intakeWaitCommand(){
+    if (getPivotAngleDegrees()>=0){
+      return new WaitCommand(2);
+
+    }
+    else{
+      return new WaitCommand(1000);
+    }
+  }
   public void rotateToAngle(){
     double voltage = 0; 
 

@@ -26,6 +26,7 @@ public class Climber extends SubsystemBase {
 
   @Override
   public void periodic() {
+    SmartDashboard.putNumber("climber voltage", climberPivot.getAppliedOutput()*12);
     SmartDashboard.putNumber("climber height", getClimber());
     // This method will be called once per scheduler run
   }

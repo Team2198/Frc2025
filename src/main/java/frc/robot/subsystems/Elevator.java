@@ -164,7 +164,7 @@ public class Elevator extends SubsystemBase {
     configLeft.signals.primaryEncoderVelocityPeriodMs(20);
     configLeft.smartCurrentLimit(40);
     motorLeft.configure(configLeft, null, null);
-    elevatorController.setTolerance(1);
+    elevatorController.setTolerance(0.5);
 
     encoderRight.setPosition(0);
     encoderLeft.setPosition(0);
@@ -175,6 +175,7 @@ public class Elevator extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("velocity elevator", getVelocityMetersPerSecond());
+    SmartDashboard.putNumber("rev ele voltage", motorLeft.getAppliedOutput()*RobotController.getBatteryVoltage());
     //SmartDashboard.putNumber("Elevator Height", getHeightMeters());
     getHeightMeters();
     
@@ -216,6 +217,7 @@ public class Elevator extends SubsystemBase {
   }
 
   public void setVoltage(double voltage){
+    SmartDashboard.putNumber("voltage elevator", voltage);
     motorRight.setVoltage(voltage);
     motorLeft.setVoltage(voltage);
     //SmartDashboard.putNumber("ele voltage", voltage);
@@ -249,6 +251,7 @@ public class Elevator extends SubsystemBase {
 
 
   public PIDController getPidController(){
+    SmartDashboard.putBoolean("Elevator at setpoint", elevatorController.atSetpoint());
     return elevatorController;
   }
 }

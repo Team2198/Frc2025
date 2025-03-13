@@ -14,7 +14,7 @@ public class ClimberOver extends Command {
   /** Creates a new ClimberOver. */
   Climber climber;
   DoubleSupplier speedTwo;
-  public ClimberOver(Climber climberOver, DoubleSupplier speed) {
+  public  ClimberOver(Climber climberOver, DoubleSupplier speed) {
     climber = climberOver;
     speedTwo = speed;
     addRequirements(climber);
