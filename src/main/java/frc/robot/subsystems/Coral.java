@@ -60,7 +60,7 @@ public class Coral extends SubsystemBase {
   public final Trigger atMax = new Trigger(() -> atMin());
 
 
-
+  
 
   SysIdRoutine sysIdRoutine = new SysIdRoutine(
   new SysIdRoutine.Config(Volts.per(Second).of(0.1),
@@ -101,7 +101,7 @@ public class Coral extends SubsystemBase {
     
 
     
-    pivotPid.setTolerance(2);
+    pivotPid.setTolerance(1);
     pivotPidTwo.setTolerance(5);
     pivotPidThree.setTolerance(5);
     

@@ -26,7 +26,14 @@ public class ElevatorCommand extends Command {
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {}
+  public void initialize() {
+    if (height.getAsDouble() == 22){
+      elevator.setTolerance(0.2);
+    }
+    else{
+      elevator.setTolerance(.5);
+    }
+  }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override

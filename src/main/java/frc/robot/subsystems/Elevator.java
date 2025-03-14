@@ -175,10 +175,16 @@ public class Elevator extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("velocity elevator", getVelocityMetersPerSecond());
+    SmartDashboard.putNumber("elevator tolerance", elevatorController.getErrorTolerance());
+
     SmartDashboard.putNumber("rev ele voltage", motorLeft.getAppliedOutput()*RobotController.getBatteryVoltage());
     //SmartDashboard.putNumber("Elevator Height", getHeightMeters());
     getHeightMeters();
     
+  }
+
+  public void setTolerance(double tolerance){
+    elevatorController.setTolerance(tolerance);
   }
 
 

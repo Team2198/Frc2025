@@ -15,9 +15,9 @@ public class AlgaeOver extends Command {
   /** Creates a new AlgeaOver. */
   Algae algea;
   double degrees;
-  int forward; 
+  double forward; 
 
-  public AlgaeOver(Algae algeaSub, double degrees, int forward) {
+  public AlgaeOver(Algae algeaSub, double degrees, double forward) {
     // Use addRequirements() here to declare subsystem dependencies.
     algea = algeaSub;
     addRequirements(algeaSub);
@@ -36,31 +36,8 @@ public class AlgaeOver extends Command {
     //algea.setVoltageDropper(speedLeft*12);
 
       algea.rotateToAngle(degrees);
-      
-      if (forward == 1){
-        algea.setLeft(5);
-        algea.setRight(5);
-      }
-
-      else if (forward == 2){
-        algea.setLeft(-5);
-        algea.setRight(-5);
-      }
-      
-      else if (forward == 3){
-        algea.setLeft(0);
-        algea.setRight(0);
-      }
-
-      else if (forward == 4){
-        algea.setLeft(-12);
-        algea.setRight(-12);
-      }
-
-      else{
-        algea.setLeft(3);
-        algea.setRight(3);
-      }
+      algea.setLeft(forward);
+      algea.setRight(forward);
       
   }
   // Called once the command ends or is interrupted.

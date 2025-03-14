@@ -10,16 +10,22 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Coral;
+import frc.robot.subsystems.Algae;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class setPivotCoral extends Command {
   /** Creates a new setPivotCoral. */
   DoubleSupplier angle;
-  Coral coral;
+  Coral coral; 
   double initialAngle;
   double intakeSpeed;
   BooleanSupplier runIntake;
-  public setPivotCoral(Coral coralSub, DoubleSupplier angleSup, double power, BooleanSupplier runIntake) {
+  public setPivotCoral(
+    Coral coralSub,  
+    DoubleSupplier angleSup, 
+    double power, 
+    BooleanSupplier runIntake) 
+    {
     coral = coralSub;
     angle = angleSup;
     intakeSpeed = power;

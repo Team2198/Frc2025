@@ -36,7 +36,7 @@ public class CoralIntake extends Command {
 
     else{
       intake = false;
-      coral.setVoltageDropper(0.35*12);
+      coral.setVoltageDropper(0.27*12);
     }
 
     

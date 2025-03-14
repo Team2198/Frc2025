@@ -122,7 +122,7 @@ public class DriveSub extends SubsystemBase {
 
   PIDController yPidController = new PIDController(4.0/12.0*4.86, 0,0);
   PIDController xPidController = new PIDController(4.0/12.0*4.86, 0,0);
-  PIDController turningPidController = new PIDController(0.007, 0,0);
+  PIDController turningPidController = new PIDController(0.05, 0,0);
   StructPublisher<Pose2d> publisher = NetworkTableInstance.getDefault()
   .getStructTopic("MyPose", Pose2d.struct).publish();
 StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
@@ -137,9 +137,9 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
     positionPidController.setTolerance(0.1);
     pidController.enableContinuousInput(-180, 180);
     pidController.setTolerance(4);
-    turningPidController.setTolerance(0.1);
+    turningPidController.setTolerance(0.3);
     turningPidController.enableContinuousInput(-180, 180);
-    turningPidController.setTolerance(4);
+    
     robotRelative(0, 0, 0);
     robotGoal = new Pose2d(0, 0, Rotation2d.fromDegrees(0));  //getPose();
 
@@ -165,6 +165,7 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
             var alliance = DriverStation.getAlliance();
             if (alliance.isPresent()) {
                 return alliance.get() == DriverStation.Alliance.Red;
+                //return false;
             }
             return false;
         },
@@ -178,6 +179,9 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
     PathPlannerLogging.setLogActivePathCallback((poses) -> field.getObject("path").setPoses(poses));
 
     SmartDashboard.putData("Field", field);
+    xPidController.setTolerance(0.05);
+    yPidController.setTolerance(0.05);
+    turningPidController.setTolerance(1);
 
 
   }
@@ -576,42 +580,50 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
     SmartDashboard.putNumber("targetP x", getPose().getX()); 
     SmartDashboard.putNumber("targetP y", getPose().getY());
 
-    double turningSpeed = turningPidController.calculate(getPose().getRotation().getDegrees(), target.getRotation().getDegrees());
-    SmartDashboard.putNumber("X speed follow path", xSpeed);
-    SmartDashboard.putNumber("y speed follow path", ySpeed);
-    SmartDashboard.putNumber("turning speed follow path", turningSpeed);
-    ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
-
-    driveRobotRelative(speeds);
     
+
+    double turningSpeed = turningPidController.calculate(getPose().getRotation().getDegrees(), target.getRotation().getDegrees());
+    ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
+    driveFieldRelative(speeds);
     
 
   }
 
-  public void updateRobotGoal(){
+  public void updateRobotGoal(double adjustment, double distanceAway){
     if (getLimelightTV()){
       double[] botPose = getLimelightBotpose(); 
 
-      double x = -botPose[0];
-      double z = -botPose[2]; 
+      //-6 inch cam to intake 
+      //5.25 inch apriltag left right 
+
+      double x = botPose[0] + adjustment;// hor (y)
+      double z = -botPose[2] - distanceAway; // vert (x)
+      double yaw = botPose[4]; 
+
+      //double xPro = Math.cos(getPose().getRotation().getRadians()) * x + Math.sin(getPose().getRotation().getRadians()) * z;
+      //double yPro = -Math.sin(getPose().getRotation().getRadians()) * x + Math.cos(getPose().getRotation().getRadians()) * z;
 
       SmartDashboard.putNumber("limelight x", z);
       SmartDashboard.putNumber("limelight y", x);
-      Pose2d currentPose2d = getPose().plus(new Transform2d(z, x, Rotation2d.fromDegrees(0)));
+      SmartDashboard.putNumber("degree goal", yaw);  
+      //Pose2d currentPose2d = getPose().transformBy(new Transform2d(z - distanceAway, x + adjustment, Rotation2d.fromDegrees(yaw)));
+      //Pose2d currentPose2d = getPose().plus(new Transform2d(yPro, xPro, Rotation2d.fromDegrees(0)));
+      Pose2d currentPose2d = getPose().transformBy(new Transform2d(z, x, Rotation2d.fromDegrees(yaw)));
+      SmartDashboard.putNumber("translation x",  currentPose2d.getX() - getPose().getX()); 
+      SmartDashboard.putNumber("translation y", currentPose2d.getY() - getPose().getY());
+      
       robotGoal = currentPose2d;
     }
   }
 
   public void updateRobotGoalAngle(){
 
-    if (getLimelightTV()){
       double[] botPose = getLimelightBotpose(); 
-      double yaw = -botPose[4]; 
+      double yaw = botPose[4]; 
       Pose2d currentPose2d = getPose().plus(new Transform2d(0, 0, Rotation2d.fromDegrees(yaw)));
       robotGoal = currentPose2d;
 
-      SmartDashboard.putNumber("degree goal", getHeading() + yaw);  
-    }
+      SmartDashboard.putNumber("degree goal", yaw);  
 
   }
   

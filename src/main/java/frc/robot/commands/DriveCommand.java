@@ -16,165 +16,166 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.proto.Kinematics;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 public class DriveCommand extends Command {
-  /** Creates a new DriveCommand. */
-  
-  DriveSub drive;
-  DoubleSupplier xSpeed;
-  DoubleSupplier ySpeed;
-  SlewRateLimiter xLimiter = new SlewRateLimiter(3);
-  SlewRateLimiter yLimiter = new SlewRateLimiter(3);
-  SlewRateLimiter turningLimiter = new SlewRateLimiter(3);
-  DoubleSupplier turningSpeed;
-  BooleanSupplier robotRelativeDrive;
-  BooleanSupplier robotRelative;
-  BooleanSupplier robotAlignApril;
-  BooleanSupplier robotAlignAprilAngle;  
-  public DriveCommand(DriveSub driveS, DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier turningSpeed, BooleanSupplier robotRelative, BooleanSupplier robotRelativeDrive, BooleanSupplier robotAlignApril, BooleanSupplier robotAlignAprilAngle) {
-    drive = driveS;
-    this.robotRelative = robotRelative;
-    this.xSpeed=xSpeed;
-    this.ySpeed=ySpeed;
-    this.turningSpeed = turningSpeed;
-    this.robotRelativeDrive = robotRelativeDrive;
-    this.robotAlignApril = robotAlignApril; 
-    this.robotAlignAprilAngle = robotAlignAprilAngle; 
-    
-    addRequirements(drive);
-    // Use addRequirements() here to declare subsystem dependencies.
-  }
+	/** Creates a new DriveCommand. */
+	
+	DriveSub drive;
+	DoubleSupplier xSpeed;
+	DoubleSupplier ySpeed;
+	SlewRateLimiter xLimiter = new SlewRateLimiter(3);
+	SlewRateLimiter yLimiter = new SlewRateLimiter(3);
+	SlewRateLimiter turningLimiter = new SlewRateLimiter(3);
+	DoubleSupplier turningSpeed;
+	BooleanSupplier robotRelativeDrive;
+	BooleanSupplier robotRelative;
+	BooleanSupplier robotAlignAprilRight;
+	BooleanSupplier robotAlignAprilLeft;  
+	public DriveCommand(DriveSub driveS, DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier turningSpeed, BooleanSupplier robotRelative, BooleanSupplier robotRelativeDrive, BooleanSupplier robotAlignApril, BooleanSupplier robotAlignAprilAngle) {
+		drive = driveS;
+		this.robotRelative = robotRelative;
+		this.xSpeed=xSpeed;
+		this.ySpeed=ySpeed;
+		this.turningSpeed = turningSpeed;
+		this.robotRelativeDrive = robotRelativeDrive;
+		this.robotAlignAprilRight = robotAlignApril; 
+		this.robotAlignAprilLeft = robotAlignAprilAngle; 
+		
+		addRequirements(drive);
+		// Use addRequirements() here to declare subsystem dependencies.
+	}
 
-  // Called when the command is initially scheduled.
-  @Override
-  public void initialize() {
-    
-  }
+	// Called when the command is initially scheduled.
+	@Override
+	public void initialize() {
+		
+	}
 
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
-    double limelightData = -drive.getLimelightAlgae();
-    
-    double robotTurnGoal =  drive.getHeading() + limelightData;
+	// Called every time the scheduler runs while the command is scheduled.
+	@Override
+	public void execute() {
+		double limelightData = -drive.getLimelightAlgae();
+		
+		double robotTurnGoal =  drive.getHeading() + limelightData;
 
-    double maxTurningRad = Constants.TeleOp.maxTurningRad;
-    double xSpeedDub = xSpeed.getAsDouble();
-
-
-    
-
-    //y joystick is inverted
-    xSpeedDub = -xSpeedDub;
-    double ySpeedDub = ySpeed.getAsDouble();
-    ySpeedDub=-ySpeedDub;
+		double maxTurningRad = Constants.TeleOp.maxTurningRad;
+		double xSpeedDub = xSpeed.getAsDouble();
 
 
-    if (Math.abs(xSpeedDub)<0.2){
-      xSpeedDub = 0;
-    }
+		
 
-    if (Math.abs(ySpeedDub)<0.2){
-      ySpeedDub = 0;
-    }
+		//y joystick is inverted
+		xSpeedDub = -xSpeedDub;
+		double ySpeedDub = ySpeed.getAsDouble();
+		ySpeedDub=-ySpeedDub;
 
 
-        
-    xSpeedDub = xLimiter.calculate(xSpeedDub);
-    ySpeedDub = yLimiter.calculate(ySpeedDub);
+		if (Math.abs(xSpeedDub)<0.2){
+			xSpeedDub = 0;
+		}
 
-    
-    
-    //StructArrayPublisher<SwerveModuleState> publisher = NetworkTableInstance.getDefault()
-    //.getStructArrayTopic("MyStates", SwerveModuleState.struct).publish();
-    //drive.setSpeed(driveSpeed.getAsDouble(), turnSpeed.getAsDouble());
-    double turningSpeedDub= -turningSpeed.getAsDouble();
-    
-    if (Math.abs(turningSpeedDub)<0.2){
-      turningSpeedDub=0;
-    }
+		if (Math.abs(ySpeedDub)<0.2){
+			ySpeedDub = 0;
+		}
 
-    turningSpeedDub = turningLimiter.calculate(turningSpeedDub);
-    turningSpeedDub *= maxTurningRad;
-    
-    xSpeedDub*=Constants.TeleOp.maxSpeed;
-    ySpeedDub*=Constants.TeleOp.maxSpeed;
-    SmartDashboard.putNumber("max turning rad", maxTurningRad);
 
-    if (Math.abs(turningSpeedDub)<0.2){
-      turningSpeedDub = 0;
-    }
+				
+		xSpeedDub = xLimiter.calculate(xSpeedDub);
+		ySpeedDub = yLimiter.calculate(ySpeedDub);
 
-    
+		
+		
+		//StructArrayPublisher<SwerveModuleState> publisher = NetworkTableInstance.getDefault()
+		//.getStructArrayTopic("MyStates", SwerveModuleState.struct).publish();
+		//drive.setSpeed(driveSpeed.getAsDouble(), turnSpeed.getAsDouble());
+		double turningSpeedDub= -turningSpeed.getAsDouble();
+		
+		if (Math.abs(turningSpeedDub)<0.2){
+			turningSpeedDub=0;
+		}
 
-    if(Math.abs(ySpeedDub)<0.15){
-      ySpeedDub=0;
-    }
-    /* turningSpeedDub*=0.6;
-    
-    xSpeedDub*=0.5;
-    ySpeedDub*=0.5;
-    turningSpeedDub*=0.5; */
-    turningSpeedDub*=0.7;
-    
-    if (robotRelativeDrive.getAsBoolean()){
-      drive.robotRelative(xSpeedDub, ySpeedDub, turningSpeedDub);
-      SmartDashboard.putString("drive type", "robot relative");
-    }
-    
-    else if (robotRelative.getAsBoolean()){
-      drive.robotRelative(xSpeedDub, 0, drive.turnToAngle(robotTurnGoal));
-      SmartDashboard.putString("drive type", "robot relative auto align");
-    
-    }
+		turningSpeedDub = turningLimiter.calculate(turningSpeedDub);
+		turningSpeedDub *= maxTurningRad;
+		
+		xSpeedDub*=Constants.TeleOp.maxSpeed;
+		ySpeedDub*=Constants.TeleOp.maxSpeed;
+		SmartDashboard.putNumber("max turning rad", maxTurningRad);
 
-    else if (robotAlignApril.getAsBoolean()){
-      drive.changeLimelightPipeLine(3);
-      drive.updateRobotGoal();
-      drive.followPathNew();
-    }
-    
-    else if (robotAlignAprilAngle.getAsBoolean()){
-      drive.changeLimelightPipeLine(3);
-      drive.updateRobotGoalAngle();
-      drive.followPathNew();
-    }
-    
+		if (Math.abs(turningSpeedDub)<0.2){
+			turningSpeedDub = 0;
+		}
 
-    else{
-      //drive.robotRelative(xSpeedDub, 0, drive.turnToAngle(robotTurnGoal));
-      //drive.robotRelative(xSpeedDub, ySpeedDub, turningSpeedDub);
-      drive.fieldRelative(xSpeedDub, ySpeedDub, turningSpeedDub);
-      SmartDashboard.putString("drive type", "field relative");
-    }
-    
-    if (!robotAlignApril.getAsBoolean() && !robotAlignAprilAngle.getAsBoolean()){
-      drive.resetGoal();
-    }
+		
 
-    
-    //drive.robotRelative(xSpeedDub, ySpeedDub, 0);
-    SmartDashboard.putNumber("turningSpeed", turningSpeedDub);
-    SmartDashboard.putNumber("x speed command", xSpeedDub);
-    SmartDashboard.putNumber("y speed command", ySpeedDub);
-    //drive.setAngle(90);
-    //drive.setSpeed(xSpeedDub/4.89, 0);
-   // drive.setAngle(90);
+		if(Math.abs(ySpeedDub)<0.15){
+			ySpeedDub=0;
+		}
+		/* turningSpeedDub*=0.6;
+		
+		xSpeedDub*=0.5;
+		ySpeedDub*=0.5;
+		turningSpeedDub*=0.5; */
+		turningSpeedDub*=0.7;
+		
+		if (robotRelativeDrive.getAsBoolean()){
+			drive.robotRelative(xSpeedDub, ySpeedDub, turningSpeedDub);
+			SmartDashboard.putString("drive type", "robot relative");
+		}
+		
+		else if (robotRelative.getAsBoolean()){
+			drive.robotRelative(xSpeedDub, 0, drive.turnToAngle(robotTurnGoal));
+			SmartDashboard.putString("drive type", "robot relative auto align");
+		
+		}
 
-    
-    
-  }
+		else if (robotAlignAprilRight.getAsBoolean()){
+			drive.changeLimelightPipeLine(3);
+			drive.updateRobotGoal(Units.inchesToMeters(-5.25 - 6), 0.450);
+			drive.followPathNew();
+		}
+		
+		else if (robotAlignAprilLeft.getAsBoolean()){
+			drive.changeLimelightPipeLine(3);
+			drive.updateRobotGoal(Units.inchesToMeters(-5.25 + 6), 0.450);
+			drive.followPathNew();  
+		} 
+		
 
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {}
+		else{
+			//drive.robotRelative(xSpeedDub, 0, drive.turnToAngle(robotTurnGoal));
+			//drive.robotRelative(xSpeedDub, ySpeedDub, turningSpeedDub);
+			drive.fieldRelative(xSpeedDub, ySpeedDub, turningSpeedDub);
+			SmartDashboard.putString("drive type", "field relative");
+		}
+		
+		if (!robotAlignAprilRight.getAsBoolean() && !robotAlignAprilLeft.getAsBoolean()){
+			drive.resetGoal();
+		}
 
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return false;
-  }
+		
+		//drive.robotRelative(xSpeedDub, ySpeedDub, 0);
+		SmartDashboard.putNumber("turningSpeed", turningSpeedDub);
+		SmartDashboard.putNumber("x speed command", xSpeedDub);
+		SmartDashboard.putNumber("y speed command", ySpeedDub);
+		//drive.setAngle(90);
+		//drive.setSpeed(xSpeedDub/4.89, 0);
+	 // drive.setAngle(90);
+
+		
+		
+	}
+
+	// Called once the command ends or is interrupted.
+	@Override
+	public void end(boolean interrupted) {}
+
+	// Returns true when the command should end.
+	@Override
+	public boolean isFinished() {
+		return false;
+	}
 }
