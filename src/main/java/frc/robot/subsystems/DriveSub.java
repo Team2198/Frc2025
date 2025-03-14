@@ -3,91 +3,57 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.fasterxml.jackson.databind.ser.std.CalendarSerializer;
-
-
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructArrayPublisher;
-import edu.wpi.first.networktables.StructPublisher;
-
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.MutDistance;
-import edu.wpi.first.units.measure.MutLinearVelocity;
-import edu.wpi.first.units.measure.MutVelocity;
-import edu.wpi.first.units.measure.MutVoltage;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.net.PortForwarder;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.units.MutableMeasure;
-
-import edu.wpi.first.units.VelocityUnit;
-import com.studica.frc.AHRS;
-import com.studica.frc.AHRS.NavXComType;
-
-import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.units.Measure;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-
 import static edu.wpi.first.units.Units.Meters;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.Vector;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-
-import org.littletonrobotics.junction.Logger;
-
-import frc.robot.LimelightHelpers;
-
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.controllers.PathFollowingController;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.util.PathPlannerLogging;
+import com.studica.frc.AHRS;
+import com.studica.frc.AHRS.NavXComType;
 
+import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.MutDistance;
+import edu.wpi.first.units.measure.MutVoltage;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
+import frc.robot.LimelightHelpers;
 
 public class DriveSub extends SubsystemBase {
   /** Creates a new DriveSub. */
@@ -113,6 +79,14 @@ public class DriveSub extends SubsystemBase {
   private final LinearVelocity  m_velocity = MetersPerSecond.of(0);
   private int limeLightPipeLine = 0;
   private Pose2d robotGoal;
+
+  private ProfiledPIDController thetaController = new ProfiledPIDController(2, 0, 0,
+    new TrapezoidProfile.Constraints(6.28, 3.14));
+
+  private HolonomicDriveController hController = new HolonomicDriveController(
+    new PIDController(1.0, 0.0, 0.0),
+    new PIDController(1.0, 0.0, 0.0), 
+    thetaController);
 
   boolean keepTurning = false;
   double robotOffset = 0;
@@ -567,6 +541,34 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
   //use limelight data to generate a target pose relative to current robot pose
   //dont forget to take into account that limelight will return camera to target pose
   //we need robot to target pose
+
+  public double getAprilTagAngle() {
+    // Get the AprilTag ID from NetworkTables
+    NetworkTableEntry tidEntry = NetworkTableInstance.getDefault()
+            .getTable("limelight")
+            .getEntry("tid");
+    
+    double tagID = tidEntry.getDouble(0);
+    
+    // Match the tag ID to the corresponding angle
+    switch ((int) tagID) {
+        case 6: return -60;
+        case 7: return 0;
+        case 8: return 60;
+        case 9: return 120;
+        case 10: return -180;
+        case 11: return -120;
+        case 17: return 60;
+        case 18: return 0;
+        case 19: return -60;
+        case 20: return -120;
+        case 21: return -180;
+        case 22: return 120;
+        case 2: return 0; // this needs to be gone by the competition 
+        default: return getHeading(); // Return 0 if no valid tag is found
+    }
+  }
+
   public void followPathNew(){
 
     Pose2d target = robotGoal;
@@ -574,18 +576,21 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
     SmartDashboard.putNumber("target x", target.getX()); 
     SmartDashboard.putNumber("target y", target.getY());
 
-    double xSpeed = xPidController.calculate(getPose().getX(), target.getX());
-    double ySpeed = yPidController.calculate(getPose().getY(), target.getY());
+    //double xSpeed = xPidController.calculate(getPose().getX(), target.getX());
+    //double ySpeed = yPidController.calculate(getPose().getY(), target.getY());
 
     SmartDashboard.putNumber("targetP x", getPose().getX()); 
     SmartDashboard.putNumber("targetP y", getPose().getY());
 
     
 
-    double turningSpeed = turningPidController.calculate(getPose().getRotation().getDegrees(), target.getRotation().getDegrees());
-    ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
-    driveFieldRelative(speeds);
+    //double turningSpeed = turningPidController.calculate(getPose().getRotation().getDegrees(), target.getRotation().getDegrees());
+    //this already outputs in the field orientation 
+    driveRobotRelative(hController.calculate(getPose(), target, 0, target.getRotation()));
+    //is already field orienteted 
     
+    //ChassisSpeeds speeds = new ChassisSpeeds(xSpeed, ySpeed, turningSpeed);
+    //driveFieldRelative(speeds);
 
   }
 
@@ -599,18 +604,19 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
       double x = botPose[0] + adjustment;// hor (y)
       double z = -botPose[2] - distanceAway; // vert (x)
       double yaw = botPose[4]; 
-
-      //double xPro = Math.cos(getPose().getRotation().getRadians()) * x + Math.sin(getPose().getRotation().getRadians()) * z;
-      //double yPro = -Math.sin(getPose().getRotation().getRadians()) * x + Math.cos(getPose().getRotation().getRadians()) * z;
+      double angle =  getAprilTagAngle();
 
       SmartDashboard.putNumber("limelight x", z);
       SmartDashboard.putNumber("limelight y", x);
-      SmartDashboard.putNumber("degree goal", yaw);  
-      //Pose2d currentPose2d = getPose().transformBy(new Transform2d(z - distanceAway, x + adjustment, Rotation2d.fromDegrees(yaw)));
-      //Pose2d currentPose2d = getPose().plus(new Transform2d(yPro, xPro, Rotation2d.fromDegrees(0)));
+      SmartDashboard.putNumber("aprilTagAngle", getAprilTagAngle());
+      SmartDashboard.putNumber("target angle change", angle - getHeading());   
+
       Pose2d currentPose2d = getPose().transformBy(new Transform2d(z, x, Rotation2d.fromDegrees(yaw)));
+
+      currentPose2d = new Pose2d(currentPose2d.getX(), currentPose2d.getY(), Rotation2d.fromDegrees(getAprilTagAngle()));
+
       SmartDashboard.putNumber("translation x",  currentPose2d.getX() - getPose().getX()); 
-      SmartDashboard.putNumber("translation y", currentPose2d.getY() - getPose().getY());
+      SmartDashboard.putNumber("translation y", currentPose2d.getY() - getPose().getY()); 
       
       robotGoal = currentPose2d;
     }
@@ -620,7 +626,7 @@ StructArrayPublisher<Pose2d> arrayPublisher = NetworkTableInstance.getDefault()
 
       double[] botPose = getLimelightBotpose(); 
       double yaw = botPose[4]; 
-      Pose2d currentPose2d = getPose().plus(new Transform2d(0, 0, Rotation2d.fromDegrees(yaw)));
+      Pose2d currentPose2d = new Pose2d(getPose().getX(), getPose().getY(), Rotation2d.fromDegrees(getAprilTagAngle()));
       robotGoal = currentPose2d;
 
       SmartDashboard.putNumber("degree goal", yaw);  
